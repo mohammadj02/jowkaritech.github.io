@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JowkariTech | IT, Web & Cybersecurity Solutions</title>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #020817;
+      --card-bg: rgba(15, 23, 42, 0.96);
+      --card-alt: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.12);
+      --accent-strong: rgba(34, 197, 94, 0.35);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-soft: #1f2937;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.5);
+      --shadow-card: 0 20px 38px rgba(15, 23, 42, 0.85);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 40%, #000 100%);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .page-glow {
+      position: fixed;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 10% 0, rgba(56, 189, 248, 0.12), transparent 55%),
+        radial-gradient(circle at 90% 0, rgba(34, 197, 94, 0.22), transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.9), #020617 65%);
+      opacity: 0.85;
+      z-index: -2;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(
+        circle at top,
+        rgba(148, 163, 184, 0.14),
+        transparent 55%
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.75;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .section {
+      padding: 5rem 0;
+    }
+
+    .section-alt {
+      padding: 5rem 0;
+      background: radial-gradient(circle at top left, #020617, #020617);
+      backdrop-filter: blur(6px);
+    }
+
+    .section-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      align-items: flex-start;
+    }
+
+    .top-strip {
+      border-bottom: 1px solid rgba(15, 23, 42, 0.85);
+      background: radial-gradient(circle at top left, #020617, #020617);
+    }
+
+    .top-strip-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0;
+      gap: 0.75rem;
+    }
+
+    .top-pill {
+      font-size: 0.75rem;
+      border-radius: 999px;
+      padding: 0.2rem 0.75rem;
+      background: rgba(15, 23, 42, 0.95);
+      color: #c4f1d1;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+
+    .top-location {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(
+        to bottom,
+        rgba(2, 6, 23, 0.96),
+        rgba(2, 6, 23, 0.8),
+        transparent
+      );
+      border-bottom: 1px solid rgba(15, 23, 42, 0.95);
+    }
+
+    .nav-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 0;
+      gap: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: #020617;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
+    }
+
+    .logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .logo-text-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .logo-text {
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+
+    .logo-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .nav-links a:hover {
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .btn-nav {
+      padding: 0.55rem 1.1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb !important;
+    }
+
+    .lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.15rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--accent-soft);
+      color: #bbf7d0;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0.8rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease,
+        background 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #020617;
+      box-shadow: 0 14px 30px rgba(34, 197, 94, 0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(34, 197, 94, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-1px);
+      background: rgba(15, 23, 42, 0.98);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .hero {
+      padding: 4.25rem 0 4.5rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+      gap: 2.6rem;
+      align-items: center;
+    }
+
+    .hero-text h1 {
+      font-size: clamp(2.1rem, 4vw, 2.9rem);
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      color: var(--text-muted);
+      max-width: 580px;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .hero-tags span {
+      font-size: 0.78rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: radial-gradient(circle at top, #020617, #020617);
+      color: #9ca3af;
+    }
+
+    .hero-card {
+      background: radial-gradient(circle at top left, #0f172a, #020617 60%);
+      border-radius: 26px;
+      padding: 1.8rem 1.6rem 1.7rem;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at top right,
+        rgba(34, 197, 94, 0.18),
+        transparent 55%
+      );
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .hero-logo {
+      width: 90px;
+      height: 90px;
+      border-radius: 24px;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 0.8rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.55);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-card h2 {
+      font-size: 1.15rem;
+    }
+
+    .hero-badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      color: #cbd5f5;
+    }
+
+    .hero-card ul {
+      list-style: none;
+      margin-bottom: 1.1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-card li {
+      font-size: 0.9rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .hero-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-title {
+      font-size: clamp(1.9rem, 3vw, 2.3rem);
+      margin-bottom: 0.25rem;
+    }
+
+    .section-subtitle {
+      color: var(--text-muted);
+      max-width: 520px;
+      font-size: 0.95rem;
+    }
+
+    .cards-grid {
+      margin-top: 2.4rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.6rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      padding: 1.6rem 1.4rem 1.5rem;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease,
+        border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(
+        circle at top,
+        rgba(148, 163, 184, 0.18),
+        transparent 55%
+      );
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(148, 163, 184, 0.8);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.95);
+    }
+
+    .card:hover::before {
+      opacity: 0.9;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #020617, #020617);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .card h3 {
+      font-size: 1.02rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .card-list {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 0.4rem;
+    }
+
+    .card-list li {
+      font-size: 0.87rem;
+      color: #d1d5db;
+      margin-bottom: 0.25rem;
+      position: relative;
+      padding-left: 0.9rem;
+    }
+
+    .card-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #22c55e;
+      font-size: 0.9rem;
+    }
+
+    .highlight-card {
+      border-color: rgba(34, 197, 94, 0.5);
+      background: linear-gradient(
+        135deg,
+        rgba(34, 197, 94, 0.15),
+        rgba(8, 47, 73, 0.6)
+      );
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 2.6rem;
+      align-items: flex-start;
+    }
+
+    .about-grid p {
+      color: var(--text-muted);
+      margin-top: 0.7rem;
+      font-size: 0.95rem;
+    }
+
+    .about-grid p + p {
+      margin-top: 0.65rem;
+    }
+
+    .about-grid strong {
+      color: #e5e7eb;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .pill {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .pill-label {
+      background: var(--accent-soft);
+      color: #bbf7d0;
+      padding: 0.22rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+    }
+
+    .steps-grid {
+      margin-top: 2.3rem;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+
+    .step {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: var(--radius-lg);
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      padding: 1.1rem 1rem;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #bbf7d0;
+      font-size: 0.8rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .step h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .step p {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.45fr);
+      gap: 2.7rem;
+      align-items: flex-start;
+    }
+
+    .contact-info p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .contact-info a {
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    .contact-info a:hover {
+      text-decoration: underline;
+    }
+
+    .contact-form {
+      background: rgba(15, 23, 42, 0.97);
+      border-radius: 22px;
+      padding: 1.6rem 1.4rem 1.5rem;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .form-field label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 0.6rem 0.7rem;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease,
+        background 0.18s ease;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+      background: #020617;
+    }
+
+    .form-note {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer {
+      border-top: 1px solid rgba(15, 23, 42, 0.95);
+      padding: 1.5rem 0 1.8rem;
+      background: #020617;
+    }
+
+    .footer-content {
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .footer-small {
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    body.rtl {
+      direction: rtl;
+    }
+
+    body.rtl .section-heading,
+    body.rtl .about-grid,
+    body.rtl .contact-grid {
+      text-align: right;
+    }
+
+    body.rtl .card-list li {
+      padding-left: 0;
+      padding-right: 0.9rem;
+    }
+
+    body.rtl .card-list li::before {
+      left: auto;
+      right: 0;
+    }
+
+    body.rtl .top-strip-inner {
+      flex-direction: row-reverse;
+    }
+
+    body.rtl .nav-content {
+      flex-direction: row-reverse;
+    }
+
+    body.rtl .nav-links {
+      flex-direction: row-reverse;
+    }
+
+    body.rtl .hero-grid,
+    body.rtl .about-grid,
+    body.rtl .steps-grid,
+    body.rtl .contact-grid {
+      direction: rtl;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .about-grid,
+      .contact-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .top-strip-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 3.6rem;
+      }
+
+      .cards-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .steps-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .form-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .hero-card {
+        margin-top: 0.5rem;
+      }
+
+      .top-strip-inner {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-glow"></div>
+
+  <header class="top-strip">
+    <div class="container top-strip-inner">
+      <span class="top-pill" data-i18n="top-pill">
+        Reliable IT, Web & Cybersecurity for real businesses.
+      </span>
+      <span class="top-location" data-i18n="top-location">
+        Based in Vancouver · Serving local & remote clients
+      </span>
+    </div>
+  </header>
+
+  <header class="navbar">
+    <div class="container nav-content">
+      <div class="logo">
+        <div class="logo-mark">
+          <img src="JowkariTech logo.png" alt="JowkariTech logo" class="logo-img" />
+        </div>
+        <div class="logo-text-wrap">
+          <span class="logo-text">JowkariTech</span>
+          <span class="logo-sub" data-i18n="logo-sub">
+            Tech Solutions Studio
+          </span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#services" data-i18n="nav-services">Services</a>
+        <a href="#about" data-i18n="nav-about">About</a>
+        <a href="#process" data-i18n="nav-process">How It Works</a>
+        <a href="#contact" class="btn-nav" data-i18n="nav-contact">Contact</a>
+      </nav>
+
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="fa">فا</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-text">
+          <h1 id="hero-title" data-i18n="hero-title">
+            All-in-One Tech Partner for Your Business.
+          </h1>
+          <p id="hero-body" data-i18n="hero-body">
+            JowkariTech helps businesses and individuals with reliable IT support,
+            POS setup, modern websites, and practical cybersecurity — so you can
+            focus on running your business, not fixing tech.
+          </p>
+          <div class="hero-actions">
+            <a href="#contact" class="btn-primary" data-i18n="hero-cta-primary">
+              Book a Free Call
+            </a>
+            <a href="#services" class="btn-secondary" data-i18n="hero-cta-secondary">
+              View Services
+            </a>
+          </div>
+          <div class="hero-tags">
+            <span data-i18n="tag-it">IT Support</span>
+            <span data-i18n="tag-pos">POS Setup</span>
+            <span data-i18n="tag-web">Web Design</span>
+            <span data-i18n="tag-cyber">Cybersecurity</span>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <img src="JowkariTech logo.png" alt="JowkariTech logo" class="hero-logo" />
+          <div class="hero-card-header">
+            <h2 id="hero-card-title" data-i18n="hero-card-title">
+              Fast, Friendly, Local Tech Help.
+            </h2>
+            <span class="hero-badge" data-i18n="hero-badge">
+              Same-week availability
+            </span>
+          </div>
+          <ul>
+            <li data-i18n="hero-li-1">✔ Remote & on-site support</li>
+            <li data-i18n="hero-li-2">✔ Clear pricing & simple language</li>
+            <li data-i18n="hero-li-3">✔ Ideal for small & growing businesses</li>
+          </ul>
+          <p class="hero-note" id="hero-note" data-i18n="hero-note">
+            Need help today? Call or text 778-266-1454 or send a quick message and we’ll follow up with options.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services" class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2 class="section-title" data-i18n="services-title">Services</h2>
+          <p class="section-subtitle" data-i18n="services-sub">
+            One team that can handle your devices, network, website, and security.
+          </p>
+        </div>
+
+        <div class="cards-grid">
+          <article class="card">
+            <div class="card-icon">
+              <span>💻</span>
+            </div>
+            <h3 data-i18n="svc1-title">IT Support & Laptop/PC Fix</h3>
+            <p data-i18n="svc1-body">
+              Software and system help for laptops and desktops — keep your machines fast,
+              clean, and stable.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc1-li-1">Windows reinstall & cleanup</li>
+              <li data-i18n="svc1-li-2">Virus & malware removal</li>
+              <li data-i18n="svc1-li-3">Software install & updates</li>
+              <li data-i18n="svc1-li-4">Performance tuning & drivers</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <span>🧾</span>
+            </div>
+            <h3 data-i18n="svc2-title">Business Setup & POS Systems</h3>
+            <p data-i18n="svc2-body">
+              End-to-end setup for shops, cafés, and offices so everything “just works”.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc2-li-1">POS system installation & configuration</li>
+              <li data-i18n="svc2-li-2">Wi-Fi, router & printer setup</li>
+              <li data-i18n="svc2-li-3">Office computers & shared drives</li>
+              <li data-i18n="svc2-li-4">Google Workspace / email setup</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <span>🌐</span>
+            </div>
+            <h3 data-i18n="svc3-title">Websites for Businesses</h3>
+            <p data-i18n="svc3-body">
+              Modern, mobile-friendly websites that actually help you
+              get more customers.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc3-li-1">Business & restaurant websites</li>
+              <li data-i18n="svc3-li-2">Landing pages & portfolios</li>
+              <li data-i18n="svc3-li-3">Online booking & contact forms</li>
+              <li data-i18n="svc3-li-4">Basic SEO & Google Maps listing</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <span>🛡️</span>
+            </div>
+            <h3 data-i18n="svc4-title">Cybersecurity & Protection</h3>
+            <p data-i18n="svc4-body">
+              Practical security for real businesses — no buzzwords, just protection.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc4-li-1">Security checkup & hardening</li>
+              <li data-i18n="svc4-li-2">Password & access best practices</li>
+              <li data-i18n="svc4-li-3">Phishing & scam awareness training</li>
+              <li data-i18n="svc4-li-4">Backup & recovery planning</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <span>☁️</span>
+            </div>
+            <h3 data-i18n="svc5-title">Cloud, Backup & Remote Support</h3>
+            <p data-i18n="svc5-body">
+              Keep your important files safe and get help without
+              leaving your desk.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc5-li-1">Cloud storage setup (Google Drive, OneDrive)</li>
+              <li data-i18n="svc5-li-2">Automatic backup solutions</li>
+              <li data-i18n="svc5-li-3">Remote troubleshooting sessions</li>
+              <li data-i18n="svc5-li-4">Ongoing maintenance plans</li>
+            </ul>
+          </article>
+
+          <article class="card highlight-card">
+            <div class="card-icon">
+              <span>⭐</span>
+            </div>
+            <h3 data-i18n="svc6-title">Monthly Tech Care for Businesses</h3>
+            <p data-i18n="svc6-body">
+              A simple monthly plan that keeps your devices, website,
+              and security in good shape.
+            </p>
+            <ul class="card-list">
+              <li data-i18n="svc6-li-1">Priority support</li>
+              <li data-i18n="svc6-li-2">Regular checkups & updates</li>
+              <li data-i18n="svc6-li-3">Website edits & minor changes</li>
+              <li data-i18n="svc6-li-4">Security monitoring & advice</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section section-alt">
+      <div class="container about-grid">
+        <div>
+          <h2 class="section-title" data-i18n="about-title">Why JowkariTech?</h2>
+          <p data-i18n="about-p1">
+            JowkariTech was created to make tech support and digital
+            services simple, honest, and affordable — especially for
+            small businesses that can’t hire a full IT team.
+          </p>
+          <p data-i18n="about-p2">
+            Instead of calling one person for your laptop, another
+            for your website, and another for security, you get
+            <strong>one reliable partner</strong> who can speak both
+            business and technology.
+          </p>
+        </div>
+        <div class="pill-list">
+          <div class="pill">
+            <span class="pill-label" data-i18n="about-pill1-label">All-in-one</span>
+            <span data-i18n="about-pill1-body">
+              IT, web, and cybersecurity under one roof.
+            </span>
+          </div>
+          <div class="pill">
+            <span class="pill-label" data-i18n="about-pill2-label">Clear pricing</span>
+            <span data-i18n="about-pill2-body">
+              No surprise invoices or hidden fees.
+            </span>
+          </div>
+          <div class="pill">
+            <span class="pill-label" data-i18n="about-pill3-label">Friendly support</span>
+            <span data-i18n="about-pill3-body">
+              We explain in simple language, not tech jargon.
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process" class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2 class="section-title" data-i18n="process-title">How It Works</h2>
+        </div>
+        <div class="steps-grid">
+          <div class="step">
+            <span class="step-number">1</span>
+            <h3 data-i18n="step1-title">Contact</h3>
+            <p data-i18n="step1-body">
+              Tell us what you need — support, website, POS, or security.
+            </p>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <h3 data-i18n="step2-title">Quick Call</h3>
+            <p data-i18n="step2-body">
+              We ask a few questions and recommend the best option for you.
+            </p>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <h3 data-i18n="step3-title">Setup & Fix</h3>
+            <p data-i18n="step3-body">
+              We schedule remote or on-site work and get everything running.
+            </p>
+          </div>
+          <div class="step">
+            <span class="step-number">4</span>
+            <h3 data-i18n="step4-title">Support</h3>
+            <p data-i18n="step4-body">
+              Need help later? Just reach out — we’re here when you need us.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section section-alt">
+      <div class="container contact-grid">
+        <div>
+          <h2 class="section-title" data-i18n="contact-title">Contact</h2>
+          <p class="section-subtitle" data-i18n="contact-sub">
+            Ready for help or want a quote? Send a message and we’ll get back
+            to you as soon as possible.
+          </p>
+
+          <div class="contact-info">
+            <p>
+              <strong data-i18n="contact-email-label">Email:</strong>
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=JowkariTech@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                JowkariTech@gmail.com
+              </a>
+            </p>
+            <p>
+              <strong data-i18n="contact-phone-label">Phone:</strong>
+              <a href="tel:+1-778-266-1454">+1 (778) 266-1454</a>
+            </p>
+            <p>
+              <strong data-i18n="contact-location-label">Location:</strong>
+              <span data-i18n="contact-location-body">
+                Vancouver, BC · Remote & on-site
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Contact form (handled by JS to open Gmail compose) -->
+        <form class="contact-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="name" data-i18n="form-name-label">Name</label>
+              <input type="text" id="name" name="Name" required />
+            </div>
+            <div class="form-field">
+              <label for="email" data-i18n="form-email-label">Email</label>
+              <input type="email" id="email" name="Email" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="phone" data-i18n="form-phone-label">Phone</label>
+              <input type="tel" id="phone" name="Phone" />
+            </div>
+            <div class="form-field">
+              <label for="service" data-i18n="form-service-label">Service Needed</label>
+              <select id="service" name="Service">
+                <option value="" data-i18n="form-service-opt0">Select…</option>
+                <option data-i18n="form-service-opt1">IT Support / Laptop Fix</option>
+                <option data-i18n="form-service-opt2">POS / Business Setup</option>
+                <option data-i18n="form-service-opt3">Website for Business</option>
+                <option data-i18n="form-service-opt4">Cybersecurity Help</option>
+                <option data-i18n="form-service-opt5">Cloud & Backup</option>
+                <option data-i18n="form-service-opt6">Monthly Tech Care</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="message" data-i18n="form-message-label">Message</label>
+            <textarea id="message" name="Message" rows="4" required></textarea>
+          </div>
+          <button type="submit" class="btn-primary btn-full" data-i18n="form-submit">
+            Send Message
+          </button>
+          <p class="form-note" data-i18n="form-note">
+            You can also email us directly at JowkariTech@gmail.com or call/text 778-266-1454.
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>
+        © <span id="year"></span> JowkariTech.
+        <span data-i18n="footer-rights">All rights reserved.</span>
+      </p>
+      <p class="footer-small" data-i18n="footer-line">
+        IT Support · POS Systems · Websites · Cybersecurity · Cloud & Backup
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Set year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const translations = {
+      fa: {
+        "top-pill": "خدمات مطمئن آی‌تی، وب و امنیت سایبری برای کسب‌وکارهای واقعی.",
+        "top-location": "مستقر در ونکوور · خدمات حضوری و ریموت",
+        "logo-sub": "استودیوی راهکارهای فناوری",
+        "nav-services": "خدمات",
+        "nav-about": "درباره ما",
+        "nav-process": "روند کار",
+        "nav-contact": "ارتباط",
+        "hero-title": "همکار همه‌کارهٔ فناوری برای کسب‌وکار شما.",
+        "hero-body":
+          "JowkariTech به کسب‌وکارها و افراد کمک می‌کند با پشتیبانی آی‌تی، راه‌اندازی POS، وب‌سایت‌های مدرن و امنیت سایبری واقعی، بدون دردسر با تکنولوژی کار کنند و روی رشد کسب‌وکارشان تمرکز کنند.",
+        "hero-cta-primary": "درخواست مشاوره رایگان",
+        "hero-cta-secondary": "مشاهده خدمات",
+        "tag-it": "پشتیبانی آی‌تی",
+        "tag-pos": "راه‌اندازی POS",
+        "tag-web": "طراحی وب‌سایت",
+        "tag-cyber": "امنیت سایبری",
+        "hero-card-title": "پشتیبانی سریع، دوستانه و قابل اعتماد.",
+        "hero-badge": "نوبت‌ دهی در همان هفته",
+        "hero-li-1": "✔ پشتیبانی ریموت و حضوری",
+        "hero-li-2": "✔ قیمت‌گذاری شفاف و توضیح ساده",
+        "hero-li-3": "✔ مناسب برای کسب‌وکارهای کوچک و در حال رشد",
+        "hero-note":
+          "همین امروز کمک لازم دارید؟ با 778-266-1454 تماس بگیرید یا پیام کوتاه بفرستید، با چند گزینه برمی‌گردیم.",
+        "services-title": "خدمات",
+        "services-sub":
+          "یک تیم که می‌تواند سیستم‌ها، شبکه، وب‌سایت و امنیت شما را یکجا پوشش دهد.",
+        "svc1-title": "پشتیبانی آی‌تی و تعمیر لپ‌تاپ / کامپیوتر",
+        "svc1-body":
+          "خدمات نرم‌افزاری و سیستمی برای لپ‌تاپ و کامپیوتر تا دستگاه‌های شما سریع، تمیز و پایدار بمانند.",
+        "svc1-li-1": "نصب مجدد و تمیز کردن ویندوز",
+        "svc1-li-2": "حذف ویروس و بدافزار",
+        "svc1-li-3": "نصب و بروزرسانی نرم‌افزارها",
+        "svc1-li-4": "بهینه‌سازی سرعت و درایورها",
+        "svc2-title": "راه‌اندازی کسب‌وکار و سیستم‌های POS",
+        "svc2-body":
+          "راه‌اندازی کامل برای رستوران، کافه و دفتر تا همه چیز بدون دردسر کار کند.",
+        "svc2-li-1": "نصب و تنظیم سیستم POS",
+        "svc2-li-2": "راه‌اندازی وای‌فای، روتر و پرینتر",
+        "svc2-li-3": "راه‌اندازی کامپیوترهای دفتر و درایوهای اشتراکی",
+        "svc2-li-4": "راه‌اندازی ایمیل و Google Workspace",
+        "svc3-title": "طراحی وب‌سایت برای کسب‌وکارها",
+        "svc3-body":
+          "وب‌سایت‌های مدرن و ریسپانسیو که واقعاً به جذب مشتری بیشتر کمک می‌کنند.",
+        "svc3-li-1": "وب‌سایت برای رستوران و کسب‌وکار",
+        "svc3-li-2": "لندینگ پیج و پورتفولیو",
+        "svc3-li-3": "رزرو آنلاین و فرم تماس",
+        "svc3-li-4": "سئوی اولیه و ثبت در Google Maps",
+        "svc4-title": "امنیت سایبری و حفاظت",
+        "svc4-body":
+          "امنیت عملی برای کسب‌وکار شما — بدون شعار، فقط محافظت واقعی.",
+        "svc4-li-1": "بررسی امنیت و سخت‌سازی سیستم",
+        "svc4-li-2": "بهترین روش‌ها برای رمزعبور و دسترسی‌ها",
+        "svc4-li-3": "آموزش تشخیص فیشینگ و کلاهبرداری",
+        "svc4-li-4": "برنامه‌ریزی بک‌آپ و بازیابی اطلاعات",
+        "svc5-title": "کلود، بک‌آپ و پشتیبانی ریموت",
+        "svc5-body":
+          "فایل‌های مهمتان را امن نگه دارید و بدون نیاز به مراجعه حضوری کمک بگیرید.",
+        "svc5-li-1": "راه‌اندازی فضای ابری (Google Drive, OneDrive)",
+        "svc5-li-2": "راهکارهای بک‌آپ خودکار",
+        "svc5-li-3": "جلسات عیب‌یابی ریموت",
+        "svc5-li-4": "پلن‌های نگهداری و پشتیبانی مداوم",
+        "svc6-title": "پلن ماهانه مراقبتِ تکنولوژی برای کسب‌وکارها",
+        "svc6-body":
+          "یک پلن ساده ماهانه که وضعیت دستگاه‌ها، وب‌سایت و امنیت شما را خوب نگه می‌دارد.",
+        "svc6-li-1": "پشتیبانی اولویت‌دار",
+        "svc6-li-2": "چکاپ و بروزرسانی‌های منظم",
+        "svc6-li-3": "اصلاحات و تغییرات کوچک در وب‌سایت",
+        "svc6-li-4": "پایش امنیت و مشاوره مستمر",
+        "about-title": "چرا JowkariTech؟",
+        "about-p1":
+          "JowkariTech برای این ساخته شده که پشتیبانی آی‌تی و خدمات دیجیتال را برای کسب‌وکارهای کوچک ساده، شفاف و قابل اعتماد کند.",
+        "about-p2":
+          "به‌جای این‌که برای لپ‌تاپ، وب‌سایت و امنیت سه نفر مختلف را صدا بزنید، یک شریک قابل اعتماد دارید که هم زبان کسب‌وکار را می‌فهمد هم زبان تکنولوژی.",
+        "about-pill1-label": "یک‌پارچه",
+        "about-pill1-body":
+          "آی‌تی، وب و امنیت سایبری همه در یک مجموعه.",
+        "about-pill2-label": "قیمت شفاف",
+        "about-pill2-body":
+          "بدون هزینه‌های مخفی و فاکتور غیرمنتظره.",
+        "about-pill3-label": "پشتیبانی دوستانه",
+        "about-pill3-body":
+          "با زبان ساده توضیح می‌دهیم، نه اصطلاحات سخت فنی.",
+        "process-title": "روند کار",
+        "step1-title": "تماس",
+        "step1-body":
+          "نیازتان را بگویید — پشتیبانی، وب‌سایت، POS یا امنیت.",
+        "step2-title": "تماس کوتاه",
+        "step2-body":
+          "چند سؤال می‌پرسیم و بهترین گزینه را پیشنهاد می‌دهیم.",
+        "step3-title": "راه‌اندازی و رفع مشکل",
+        "step3-body":
+          "جلسه ریموت یا حضوری تنظیم می‌کنیم و همه چیز را درست می‌کنیم.",
+        "step4-title": "پشتیبانی",
+        "step4-body":
+          "بعداً دوباره کمک خواستید؟ هر وقت نیاز داشتید در دسترسیم.",
+        "contact-title": "ارتباط با ما",
+        "contact-sub":
+          "برای دریافت کمک یا برآورد قیمت، پیام بفرستید تا در اولین فرصت پاسخ بدهیم.",
+        "contact-email-label": "ایمیل:",
+        "contact-phone-label": "تلفن:",
+        "contact-location-label": "موقعیت:",
+        "contact-location-body": "ونکوور، بریتیش کلمبیا · خدمات حضوری و ریموت",
+        "form-name-label": "نام",
+        "form-email-label": "ایمیل",
+        "form-phone-label": "تلفن",
+        "form-service-label": "نوع خدمت مورد نیاز",
+        "form-service-opt0": "انتخاب کنید…",
+        "form-service-opt1": "پشتیبانی آی‌تی / لپ‌تاپ",
+        "form-service-opt2": "راه‌اندازی POS / کسب‌وکار",
+        "form-service-opt3": "طراحی وب‌سایت برای کسب‌وکار",
+        "form-service-opt4": "کمک در امنیت سایبری",
+        "form-service-opt5": "کلود و بک‌آپ",
+        "form-service-opt6": "پلن ماهانه مراقبت",
+        "form-message-label": "پیام",
+        "form-submit": "ارسال پیام",
+        "form-note":
+          "همچنین می‌توانید مستقیم به JowkariTech@gmail.com ایمیل بزنید یا با 778-266-1454 تماس بگیرید.",
+        "footer-rights": "تمام حقوق محفوظ است.",
+        "footer-line":
+          "پشتیبانی آی‌تی · سیستم‌های POS · وب‌سایت · امنیت سایبری · کلود و بک‌آپ"
+      }
+    };
+
+    function setLanguage(lang) {
+      const html = document.documentElement;
+      const body = document.body;
+      if (lang === "fa") {
+        html.lang = "fa";
+        body.classList.add("rtl");
+      } else {
+        html.lang = "en";
+        body.classList.remove("rtl");
+      }
+
+      const elements = document.querySelectorAll("[data-i18n]");
+      elements.forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        const dict = translations[lang];
+        if (dict && dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+
+      document.querySelectorAll(".lang-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.lang === lang);
+      });
+    }
+
+    // Language buttons
+    document.querySelectorAll(".lang-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const lang = btn.dataset.lang;
+        setLanguage(lang);
+      });
+    });
+
+    // --- Contact form -> open Gmail compose ---
+    const contactForm = document.querySelector(".contact-form");
+
+    if (contactForm) {
+      contactForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const phone = document.getElementById("phone").value;
+        const service = document.getElementById("service").value;
+        const message = document.getElementById("message").value;
+
+        const subject = "New contact from JowkariTech website";
+        const body =
+          "Name: " + name +
+          "\nEmail: " + email +
+          "\nPhone: " + phone +
+          "\nService: " + service +
+          "\n\nMessage:\n" + message;
+
+        const url =
+          "https://mail.google.com/mail/?view=cm&fs=1" +
+          "&to=" + encodeURIComponent("JowkariTech@gmail.com") +
+          "&su=" + encodeURIComponent(subject) +
+          "&body=" + encodeURIComponent(body);
+
+        window.open(url, "_blank", "noopener");
+      });
+    }
+  </script>
+</body>
+</html>
