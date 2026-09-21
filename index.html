@@ -26,61 +26,135 @@
 <div class="metrics"><div class="metric"><strong>24/7</strong><span>website replies</span></div><div class="metric"><strong>C$79/mo</strong><span>founding plan</span></div><div class="metric"><strong>Free setup</strong><span>first 10 customers</span></div></div>
 </div>
 
-<div class="product-shell" id="demo">
-<div class="windowbar">
-  <div class="dots"><span></span><span></span><span></span></div>
-  <div class="window-url">JowkariTech AI</div>
-  <div style="width:48px"></div>
-</div>
 
-<div class="assistant-top">
-  <div class="assistant-brand">
-    <div class="bot-avatar">AI</div>
-    <div>
-      <strong>JowkariTech Assistant</strong>
-      <small>Ask me anything about the service</small>
+<div class="ai-console" id="demo">
+
+  <div class="ai-console-header">
+    <div class="ai-brand">
+      <div class="ai-logo">AI</div>
+
+      <div>
+        <div class="ai-title-row">
+          <strong>JowkariTech AI</strong>
+          <span class="ai-status">
+            <span class="status-dot"></span>
+            Online
+          </span>
+        </div>
+
+        <small>Your 24/7 business receptionist</small>
+      </div>
     </div>
-  </div>
-  <span class="online">Online</span>
-</div>
 
-<div class="real-ai-chat">
-  <div class="chat-log" id="chat-log">
-    <div class="bubble bot">
-      Hi! I'm the JowkariTech AI assistant. Tell me about your business or ask how the AI receptionist works.
-    </div>
-  </div>
-
-  <div class="chat-suggestions">
-    <button data-chat-prompt="How does the AI receptionist work?">
-      How does it work?
-    </button>
-
-    <button data-chat-prompt="Would this work for a plumbing business?">
-      Is it good for plumbers?
-    </button>
-
-    <button data-chat-prompt="What does the C$79 per month plan include?">
-      What's included?
-    </button>
-  </div>
-
-  <form id="ai-chat-form" class="chat-composer">
-    <input
-      id="ai-chat-input"
-      type="text"
-      maxlength="1500"
-      autocomplete="off"
-      placeholder="Type a message..."
-      required
+    <button
+      class="new-chat-button"
+      id="new-chat-button"
+      type="button"
+      aria-label="Start new conversation"
     >
-    <button type="submit">Send</button>
-  </form>
-
-  <div class="chat-disclaimer">
-    AI responses may occasionally be inaccurate. For final details, contact JowkariTech.
+      New chat
+    </button>
   </div>
-</div>
+
+
+  <div class="ai-chat-area">
+
+    <div class="ai-chat-intro">
+      <span>LIVE DEMO</span>
+      <h3>Talk to the AI receptionist.</h3>
+      <p>
+        Ask about pricing, features, or tell it what kind of business you run.
+      </p>
+    </div>
+
+
+    <div class="premium-chat-log" id="chat-log">
+
+      <div class="message-row bot-message">
+        <div class="message-avatar ai-avatar">AI</div>
+
+        <div class="message-content">
+          <div class="message-name">
+            JowkariTech AI
+          </div>
+
+          <div class="message-bubble">
+            Hi! I'm the JowkariTech AI assistant.
+            Tell me what kind of business you run and I'll explain
+            how an AI receptionist could help you.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <div class="premium-suggestions" id="chat-suggestions">
+
+      <button
+        type="button"
+        data-chat-prompt="I own a plumbing company. How would this help me?"
+      >
+        I own a plumbing company
+      </button>
+
+      <button
+        type="button"
+        data-chat-prompt="What does the C$79 monthly plan include?"
+      >
+        What's included for C$79?
+      </button>
+
+      <button
+        type="button"
+        data-chat-prompt="How does the AI receptionist work?"
+      >
+        How does it work?
+      </button>
+
+    </div>
+
+
+    <form id="ai-chat-form" class="premium-composer">
+
+      <div class="composer-inner">
+
+        <input
+          id="ai-chat-input"
+          type="text"
+          maxlength="1500"
+          autocomplete="off"
+          placeholder="Message JowkariTech AI..."
+          required
+        >
+
+        <button
+          class="send-button"
+          type="submit"
+          aria-label="Send message"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+          >
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </button>
+
+      </div>
+
+    </form>
+
+
+    <div class="ai-footer-note">
+      AI can make mistakes. Final service details are confirmed by JowkariTech.
+    </div>
+
+  </div>
+
 </div>
 </div>
 

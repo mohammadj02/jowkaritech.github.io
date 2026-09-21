@@ -1,214 +1,527 @@
 document.getElementById("year") &&
-  (document.getElementById("year").textContent = new Date().getFullYear());
+  (document.getElementById("year").textContent =
+    new Date().getFullYear());
 
 
-/* ==========================================
-   REAL JOWKARITECH AI CHAT
-========================================== */
+/* =========================================
+   JOWKARITECH PREMIUM AI CHAT
+========================================= */
 
 const CHAT_ENDPOINT =
   "https://jowkari-ai.jowkari-1mh.workers.dev/chat";
 
-const chatLog = document.getElementById("chat-log");
-const chatForm = document.getElementById("ai-chat-form");
-const chatInput = document.getElementById("ai-chat-input");
+const chatLog =
+  document.getElementById("chat-log");
+
+const chatForm =
+  document.getElementById("ai-chat-form");
+
+const chatInput =
+  document.getElementById("ai-chat-input");
+
+const suggestions =
+  document.getElementById("chat-suggestions");
+
+const newChatButton =
+  document.getElementById("new-chat-button");
 
 let chatHistory = [];
 let chatBusy = false;
 
-function addChatBubble(text, who) {
+
+const welcomeMessage =
+  "Hi! I'm the JowkariTech AI assistant. Tell me what kind of business you run and I'll explain how an AI receptionist could help you.";
+
+
+function scrollChat() {
   if (!chatLog) return;
 
-  const div = document.createElement("div");
-  div.className = "bubble " + who;
-  div.textContent = text;
-
-  chatLog.appendChild(div);
-
-  chatLog.scrollTop = chatLog.scrollHeight;
-
-  return div;
+  requestAnimationFrame(() => {
+    chatLog.scrollTo({
+      top: chatLog.scrollHeight,
+      behavior: "smooth"
+    });
+  });
 }
 
-async function sendAIMessage(message) {
-  const clean = message.trim();
 
-  if (!clean || chatBusy) return;
+function createMessage(text, who) {
+  const row =
+    document.createElement("div");
+
+  row.className =
+    `message-row ${
+      who === "user"
+        ? "user-message"
+        : "bot-message"
+    }`;
+
+
+  const avatar =
+    document.createElement("div");
+
+  avatar.className =
+    "message-avatar " +
+    (who === "user"
+      ? "user-avatar"
+      : "ai-avatar");
+
+  avatar.textContent =
+    who === "user" ? "You" : "AI";
+
+
+  const content =
+    document.createElement("div");
+
+  content.className =
+    "message-content";
+
+
+  const name =
+    document.createElement("div");
+
+  name.className =
+    "message-name";
+
+  name.textContent =
+    who === "user"
+      ? "You"
+      : "JowkariTech AI";
+
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className =
+    "message-bubble";
+
+  bubble.textContent = text;
+
+
+  content.appendChild(name);
+  content.appendChild(bubble);
+
+  row.appendChild(avatar);
+  row.appendChild(content);
+
+  chatLog.appendChild(row);
+
+  scrollChat();
+
+  return row;
+}
+
+
+function createTypingIndicator() {
+
+  const row =
+    document.createElement("div");
+
+  row.className =
+    "message-row bot-message typing-row";
+
+
+  row.innerHTML = `
+    <div class="message-avatar ai-avatar">
+      AI
+    </div>
+
+    <div class="message-content">
+
+      <div class="message-name">
+        JowkariTech AI
+      </div>
+
+      <div class="message-bubble typing-bubble">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+    </div>
+  `;
+
+  chatLog.appendChild(row);
+
+  scrollChat();
+
+  return row;
+}
+
+
+async function sendAIMessage(message) {
+
+  const clean =
+    message.trim();
+
+  if (!clean || chatBusy)
+    return;
+
 
   chatBusy = true;
 
-  addChatBubble(clean, "user");
+  suggestions?.classList.add(
+    "suggestions-hidden"
+  );
+
+
+  createMessage(
+    clean,
+    "user"
+  );
+
 
   chatHistory.push({
     role: "user",
     content: clean
   });
 
-  if (chatInput) {
-    chatInput.value = "";
-    chatInput.disabled = true;
-  }
 
-  const typing = addChatBubble("Thinking...", "bot");
+  chatInput.value = "";
+  chatInput.disabled = true;
+
+
+  const typing =
+    createTypingIndicator();
+
 
   try {
-    const response = await fetch(CHAT_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: clean,
-        history: chatHistory.slice(0, -1).slice(-8)
-      })
-    });
 
-    const data = await response.json();
+    const response =
+      await fetch(
+        CHAT_ENDPOINT,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            message: clean,
+
+            history:
+              chatHistory
+                .slice(0, -1)
+                .slice(-8)
+          })
+        }
+      );
+
+
+    const data =
+      await response.json();
+
 
     if (!response.ok) {
-      throw new Error(data.error || "AI request failed");
+      throw new Error(
+        data.error ||
+        "AI request failed"
+      );
     }
 
-    if (typing) typing.remove();
+
+    typing.remove();
+
 
     const reply =
       data.reply ||
       "Sorry, I couldn't answer that right now.";
 
-    addChatBubble(reply, "bot");
+
+    createMessage(
+      reply,
+      "assistant"
+    );
+
 
     chatHistory.push({
       role: "assistant",
       content: reply
     });
 
-    chatHistory = chatHistory.slice(-10);
 
-  } catch (error) {
+    chatHistory =
+      chatHistory.slice(-10);
+
+  }
+
+  catch (error) {
+
     console.error(error);
 
-    if (typing) typing.remove();
+    typing.remove();
 
-    addChatBubble(
-      "Sorry, I'm having trouble connecting right now. You can still use the form below or call/text +1 (778) 266-1454.",
-      "bot"
+
+    createMessage(
+      "I'm having trouble connecting right now. You can still use the contact form below or call/text +1 (778) 266-1454.",
+      "assistant"
     );
-  } finally {
+
+  }
+
+  finally {
+
     chatBusy = false;
 
-    if (chatInput) {
-      chatInput.disabled = false;
-      chatInput.focus();
-    }
+    chatInput.disabled = false;
+    chatInput.focus();
+
   }
 }
 
-if (chatForm) {
-  chatForm.addEventListener("submit", event => {
+
+chatForm?.addEventListener(
+  "submit",
+  event => {
+
     event.preventDefault();
 
-    sendAIMessage(chatInput.value);
+    sendAIMessage(
+      chatInput.value
+    );
+
+  }
+);
+
+
+document
+  .querySelectorAll(
+    "[data-chat-prompt]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        sendAIMessage(
+          button.dataset.chatPrompt
+        );
+
+      }
+    );
+
   });
-}
-
-document.querySelectorAll("[data-chat-prompt]").forEach(button => {
-  button.addEventListener("click", () => {
-    sendAIMessage(button.dataset.chatPrompt);
-  });
-});
 
 
-/* ==========================================
-   REAL WEB3FORMS LEAD FORM
-========================================== */
+newChatButton?.addEventListener(
+  "click",
+  () => {
 
-const form = document.getElementById("lead-form");
+    chatHistory = [];
+
+    chatLog.innerHTML = "";
+
+    createMessage(
+      welcomeMessage,
+      "assistant"
+    );
+
+    suggestions?.classList.remove(
+      "suggestions-hidden"
+    );
+
+    chatInput.value = "";
+
+    chatInput.focus();
+
+  }
+);
+
+
+
+/* =========================================
+   WEB3FORMS LEAD FORM
+========================================= */
+
+const form =
+  document.getElementById(
+    "lead-form"
+  );
+
 
 if (form) {
-  const result = document.createElement("div");
 
-  result.className = "form-status";
-  result.setAttribute("aria-live", "polite");
+  const result =
+    document.createElement(
+      "div"
+    );
+
+
+  result.className =
+    "form-status";
+
+
+  result.setAttribute(
+    "aria-live",
+    "polite"
+  );
+
 
   form.appendChild(result);
 
-  const botcheck = document.createElement("input");
 
-  botcheck.type = "checkbox";
-  botcheck.name = "botcheck";
-  botcheck.style.display = "none";
-  botcheck.tabIndex = -1;
+  const botcheck =
+    document.createElement(
+      "input"
+    );
 
-  form.appendChild(botcheck);
 
-  form.addEventListener("submit", async event => {
-    event.preventDefault();
+  botcheck.type =
+    "checkbox";
 
-    const submitButton =
-      form.querySelector('button[type="submit"]');
+  botcheck.name =
+    "botcheck";
 
-    submitButton.disabled = true;
-    submitButton.textContent = "Sending...";
+  botcheck.style.display =
+    "none";
 
-    result.className = "form-status";
-    result.textContent = "";
+  botcheck.tabIndex =
+    -1;
 
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
 
-    data.access_key =
-      "67b05f47-421b-41f8-837e-c8a12741dc9c";
+  form.appendChild(
+    botcheck
+  );
 
-    data.subject =
-      "New JowkariTech AI Receptionist Lead";
 
-    data.from_name =
-      "JowkariTech Website";
+  form.addEventListener(
+    "submit",
+    async event => {
 
-    try {
-      const response = await fetch(
-        "https://api.web3forms.com/submit",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          body: JSON.stringify(data)
-        }
-      );
+      event.preventDefault();
 
-      const json = await response.json();
 
-      if (response.ok && json.success) {
-        result.className =
-          "form-status success";
-
-        result.innerHTML =
-          "<strong>Thanks!</strong> Your message was sent. We'll contact you shortly.";
-
-        form.reset();
-
-      } else {
-        throw new Error(
-          json.message || "Submission failed"
+      const submitButton =
+        form.querySelector(
+          'button[type="submit"]'
         );
-      }
 
-    } catch (error) {
-      console.error(error);
 
-      result.className =
-        "form-status error";
+      submitButton.disabled =
+        true;
 
-      result.textContent =
-        "Something went wrong. Please call or text us at +1 (778) 266-1454.";
-
-    } finally {
-      submitButton.disabled = false;
 
       submitButton.textContent =
-        "Send my business details →";
+        "Sending...";
+
+
+      result.className =
+        "form-status";
+
+
+      result.textContent =
+        "";
+
+
+      const formData =
+        new FormData(form);
+
+
+      const data =
+        Object.fromEntries(
+          formData.entries()
+        );
+
+
+      data.access_key =
+        "67b05f47-421b-41f8-837e-c8a12741dc9c";
+
+
+      data.subject =
+        "New JowkariTech AI Receptionist Lead";
+
+
+      data.from_name =
+        "JowkariTech Website";
+
+
+      try {
+
+        const response =
+          await fetch(
+            "https://api.web3forms.com/submit",
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Accept:
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify(
+                  data
+                )
+            }
+          );
+
+
+        const json =
+          await response.json();
+
+
+        if (
+          response.ok &&
+          json.success
+        ) {
+
+          result.className =
+            "form-status success";
+
+
+          result.innerHTML =
+            "<strong>Thanks!</strong> Your message was sent. We'll contact you shortly.";
+
+
+          form.reset();
+
+        }
+
+        else {
+
+          throw new Error(
+            json.message ||
+            "Submission failed"
+          );
+
+        }
+
+      }
+
+      catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        result.className =
+          "form-status error";
+
+
+        result.textContent =
+          "Something went wrong. Please call or text us at +1 (778) 266-1454.";
+
+      }
+
+      finally {
+
+        submitButton.disabled =
+          false;
+
+
+        submitButton.textContent =
+          "Send my business details →";
+
+      }
+
     }
-  });
+  );
 }
