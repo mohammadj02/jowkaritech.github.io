@@ -27,10 +27,60 @@
 </div>
 
 <div class="product-shell" id="demo">
-<div class="windowbar"><div class="dots"><span></span><span></span><span></span></div><div class="window-url">yourbusiness.ca</div><div style="width:48px"></div></div>
-<div class="assistant-top"><div class="assistant-brand"><div class="bot-avatar">AI</div><div><strong>Your Business Assistant</strong><small>Usually replies instantly</small></div></div><span class="online">Online</span></div>
-<div class="chat" id="chat"><div class="bubble bot">Hi! How can I help today?</div><div class="bubble user">I need a quote for a service.</div><div class="bubble bot">Absolutely. I can collect a few details so the team can follow up. What type of service do you need?</div><div class="quick"><button data-demo="quote">Get a quote</button><button data-demo="hours">Ask about hours</button><button data-demo="book">Request booking</button></div></div>
-<div class="demo-label">Interactive example. Your real assistant is customized with your approved business information.</div>
+<div class="windowbar">
+  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="window-url">JowkariTech AI</div>
+  <div style="width:48px"></div>
+</div>
+
+<div class="assistant-top">
+  <div class="assistant-brand">
+    <div class="bot-avatar">AI</div>
+    <div>
+      <strong>JowkariTech Assistant</strong>
+      <small>Ask me anything about the service</small>
+    </div>
+  </div>
+  <span class="online">Online</span>
+</div>
+
+<div class="real-ai-chat">
+  <div class="chat-log" id="chat-log">
+    <div class="bubble bot">
+      Hi! I'm the JowkariTech AI assistant. Tell me about your business or ask how the AI receptionist works.
+    </div>
+  </div>
+
+  <div class="chat-suggestions">
+    <button data-chat-prompt="How does the AI receptionist work?">
+      How does it work?
+    </button>
+
+    <button data-chat-prompt="Would this work for a plumbing business?">
+      Is it good for plumbers?
+    </button>
+
+    <button data-chat-prompt="What does the C$79 per month plan include?">
+      What's included?
+    </button>
+  </div>
+
+  <form id="ai-chat-form" class="chat-composer">
+    <input
+      id="ai-chat-input"
+      type="text"
+      maxlength="1500"
+      autocomplete="off"
+      placeholder="Type a message..."
+      required
+    >
+    <button type="submit">Send</button>
+  </form>
+
+  <div class="chat-disclaimer">
+    AI responses may occasionally be inaccurate. For final details, contact JowkariTech.
+  </div>
+</div>
 </div>
 </div>
 
