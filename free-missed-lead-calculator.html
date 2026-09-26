@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Missed Lead Calculator for Contractors | JowkariTech</title>
+<meta name="description" content="Estimate the potential monthly value of website leads that leave without contacting your home-service business. Free calculator from JowkariTech.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://jowkaritech.com/free-missed-lead-calculator.html">
+<link rel="icon" href="JowkariTech%20logo.png"><link rel="stylesheet" href="styles.css">
+<style>
+.calc-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:26px;align-items:start}
+.calc-card,.calc-result{padding:28px;border:1px solid #264c64;border-radius:25px;background:#081a29}
+.calc-card label{display:block;margin:16px 0 6px;font-weight:850}
+.calc-card small{display:block;color:#7895a8;margin-top:5px}
+.calc-card input{width:100%;padding:13px 14px;border:1px solid #2a4b62;border-radius:13px;background:#061521;color:#fff;outline:none}
+.big-number{font-size:clamp(2.7rem,7vw,5.3rem);line-height:1;font-weight:950;letter-spacing:-.07em;margin:12px 0;background:linear-gradient(90deg,#fff,#75f2c6,#5ccfff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
+.breakdown div{padding:15px;border:1px solid #1d3c52;border-radius:15px;background:#071521}
+.breakdown strong{display:block;font-size:1.15rem}.breakdown span{font-size:.76rem;color:#809bad}
+.audit{margin-top:22px;padding:22px;border:1px solid rgba(117,242,198,.26);border-radius:20px;background:rgba(117,242,198,.06)}
+.audit-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.audit-form input{width:100%;padding:12px 13px;border:1px solid #2a4b62;border-radius:12px;background:#061521;color:#fff}
+.audit-form .wide,.audit-form button,.audit-form .status{grid-column:1/-1}
+.status{font-size:.84rem;color:#9eb3c3}
+@media(max-width:850px){.calc-wrap{grid-template-columns:1fr}.audit-form{grid-template-columns:1fr}.audit-form .wide,.audit-form button,.audit-form .status{grid-column:1}}
+</style>
+</head>
+<body>
+<div class="announce"><strong>Free tool:</strong> estimate missed lead value in about 30 seconds.</div>
+<nav class="nav"><div class="container nav-inner"><a class="brand" href="index.html"><img src="JowkariTech logo.png" alt="JowkariTech logo"><span>JowkariTech</span></a><div class="nav-links"><a href="index.html">Home</a><a href="index.html#demo">Live demo</a><a class="btn btn-primary btn-small" href="#audit">Free website audit</a></div></div></nav>
+<main>
+<section class="subhero"><div class="container">
+<div class="breadcrumbs"><a href="index.html">JowkariTech</a> / Free Missed Lead Calculator</div>
+<span class="eyebrow"><span class="pulse"></span> Free contractor calculator</span>
+<h1>What could missed website leads be <span class="gradient-text">costing your business?</span></h1>
+<p>This is a scenario calculator, not a revenue promise. Enter your own assumptions to estimate the potential value of website inquiries you may be missing.</p>
+</div></section>
+<section class="section"><div class="container calc-wrap">
+<div class="calc-card">
+<h2 style="font-size:2rem">Your assumptions</h2>
+<label for="visitors">Monthly website visitors</label><input id="visitors" type="number" min="0" value="500">
+<label for="inquiry">Visitor-to-inquiry rate (%)</label><input id="inquiry" type="number" min="0" max="100" step=".1" value="5">
+<label for="missed">Inquiries not captured (%)</label><input id="missed" type="number" min="0" max="100" step=".1" value="30">
+<label for="close">Close rate on qualified inquiries (%)</label><input id="close" type="number" min="0" max="100" step=".1" value="35">
+<label for="job">Average customer/job value (C$)</label><input id="job" type="number" min="0" step="10" value="750">
+</div>
+<div class="calc-result">
+<div class="kicker">Estimated potential value</div><div class="big-number" id="monthly">C$0/mo</div>
+<p id="explain" style="color:#9eb4c4"></p>
+<div class="breakdown">
+<div><strong id="leads">0</strong><span>estimated inquiries/month</span></div>
+<div><strong id="lost">0</strong><span>estimated missed inquiries</span></div>
+<div><strong id="customers">0</strong><span>potential missed customers</span></div>
+<div><strong id="annual">C$0</strong><span>annual scenario value</span></div>
+</div>
+<p style="color:#728da0;font-size:.78rem">Illustrative only. Actual traffic, conversion, close rates, job value and results vary. JowkariTech does not guarantee additional leads or sales.</p>
+<div class="audit" id="audit"><div class="kicker">Free lead-capture audit</div><h3 style="margin:7px 0">Want us to look at your website?</h3>
+<p style="color:#9eb4c4;margin-top:0">Send your website and we’ll review where a lead-capture assistant could fit. If it makes sense, you can test JowkariTech free for 30 days.</p>
+<form class="audit-form" id="audit-form">
+<input name="business" placeholder="Business name" required><input name="name" placeholder="Your name" required>
+<input class="wide" name="website" type="url" placeholder="https://yourbusiness.com" required>
+<input name="email" type="email" placeholder="Email" required><input name="phone" type="tel" placeholder="Phone (optional)">
+<button class="btn btn-primary" type="submit">Send my website for a free audit →</button><div class="status" id="status"></div>
+</form></div>
+</div>
+</div></section></main>
+<footer class="footer"><div class="container footer-inner"><div><strong>JowkariTech</strong><br>Website lead-capture AI for service businesses.</div><div><a href="index.html">Home</a></div><div>© <span id="year"></span> JowkariTech</div></div></footer>
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
+const ids=["visitors","inquiry","missed","close","job"];
+const money=n=>new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD",maximumFractionDigits:0}).format(Math.max(0,n||0));
+const num=n=>new Intl.NumberFormat("en-CA",{maximumFractionDigits:1}).format(Math.max(0,n||0));
+function calc(){const visitors=+visitorsEl.value||0,inquiry=(+inquiryEl.value||0)/100,missed=(+missedEl.value||0)/100,close=(+closeEl.value||0)/100,job=+jobEl.value||0;const inquiries=visitors*inquiry,lost=inquiries*missed,customers=lost*close,monthly=customers*job;monthlyEl.textContent=money(monthly)+"/mo";leadsEl.textContent=num(inquiries);lostEl.textContent=num(lost);customersEl.textContent=num(customers);annualEl.textContent=money(monthly*12);explain.textContent="Using your assumptions, missed website inquiries could represent about "+money(monthly)+" in potential customer value per month."}
+const visitorsEl=document.getElementById("visitors"),inquiryEl=document.getElementById("inquiry"),missedEl=document.getElementById("missed"),closeEl=document.getElementById("close"),jobEl=document.getElementById("job"),monthlyEl=document.getElementById("monthly"),leadsEl=document.getElementById("leads"),lostEl=document.getElementById("lost"),customersEl=document.getElementById("customers"),annualEl=document.getElementById("annual"),explain=document.getElementById("explain");
+ids.forEach(id=>document.getElementById(id).addEventListener("input",calc));calc();
+const form=document.getElementById("audit-form"),status=document.getElementById("status");
+form.addEventListener("submit",async e=>{e.preventDefault();const btn=form.querySelector("button");btn.disabled=true;btn.textContent="Sending…";status.textContent="";const data=Object.fromEntries(new FormData(form).entries());data.access_key="67b05f47-421b-41f8-837e-c8a12741dc9c";data.subject="New JowkariTech Free Website Audit Lead";data.from_name="JowkariTech Missed Lead Calculator";data.message="Free website lead-capture audit request.";try{const r=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok||!j.success)throw new Error(j.message||"Submission failed");status.textContent="Sent — we’ll review your website and follow up.";form.reset()}catch(err){status.textContent="Could not send. Email jowkaritech@gmail.com instead."}finally{btn.disabled=false;btn.textContent="Send my website for a free audit →"}});
+</script>
+</body></html>
