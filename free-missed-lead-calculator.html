@@ -1,79 +1,460 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Free Missed Lead Calculator for Contractors | JowkariTech</title>
-<meta name="description" content="Estimate the potential monthly value of website leads that leave without contacting your home-service business. Free calculator from JowkariTech.">
-<meta name="robots" content="index,follow">
+<meta name="description" content="Estimate the potential monthly value of website leads that leave without contacting your service business. Free missed-lead calculator from JowkariTech.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="author" content="JowkariTech">
 <link rel="canonical" href="https://jowkaritech.com/free-missed-lead-calculator.html">
-<link rel="icon" href="JowkariTech%20logo.png"><link rel="stylesheet" href="styles.css">
+<link rel="icon" href="https://jowkaritech.com/JowkariTech%20logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f4efe6">
+
 <style>
-.calc-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:26px;align-items:start}
-.calc-card,.calc-result{padding:28px;border:1px solid #264c64;border-radius:25px;background:#081a29}
-.calc-card label{display:block;margin:16px 0 6px;font-weight:850}
-.calc-card small{display:block;color:#7895a8;margin-top:5px}
-.calc-card input{width:100%;padding:13px 14px;border:1px solid #2a4b62;border-radius:13px;background:#061521;color:#fff;outline:none}
-.big-number{font-size:clamp(2.7rem,7vw,5.3rem);line-height:1;font-weight:950;letter-spacing:-.07em;margin:12px 0;background:linear-gradient(90deg,#fff,#75f2c6,#5ccfff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
-.breakdown div{padding:15px;border:1px solid #1d3c52;border-radius:15px;background:#071521}
-.breakdown strong{display:block;font-size:1.15rem}.breakdown span{font-size:.76rem;color:#809bad}
-.audit{margin-top:22px;padding:22px;border:1px solid rgba(117,242,198,.26);border-radius:20px;background:rgba(117,242,198,.06)}
-.audit-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
-.audit-form input{width:100%;padding:12px 13px;border:1px solid #2a4b62;border-radius:12px;background:#061521;color:#fff}
+:root{
+  --paper:#f4efe6;
+  --paper-2:#ebe4d6;
+  --card:#fffdf8;
+  --ink:#16140f;
+  --ink-2:#4a463d;
+  --muted:#7b7566;
+  --line:#d9d0bd;
+  --accent:#ff5a1f;
+  --accent-ink:#fff;
+  --accent-soft:#ffe3d6;
+  --green:#1f7a4d;
+  --night:#14130f;
+  --night-2:#211f19;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:var(--display);line-height:1.05;letter-spacing:-.02em}
+h1{font-size:clamp(2.7rem,6vw,5rem);font-weight:800}
+h2{font-size:clamp(2rem,4.2vw,3.2rem);font-weight:800}
+h3{font-size:1.3rem;font-weight:700}
+.eyebrow{font-family:var(--mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);display:inline-flex;align-items:center;gap:10px;margin-bottom:18px}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor}
+.lede{font-size:1.15rem;color:var(--ink-2);max-width:720px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:1rem;padding:15px 24px;border-radius:999px;text-decoration:none;border:2px solid var(--ink);transition:transform .15s ease,background .15s ease,color .15s ease;cursor:pointer;font-family:var(--body)}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#e84c14;border-color:#e84c14}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--ink);color:var(--paper)}
+
+.topbar{background:var(--ink);color:var(--paper);font-size:.9rem;text-align:center;padding:10px 16px}
+.topbar strong{color:#ffb392}
+
+header.nav{position:sticky;top:0;z-index:50;background:rgba(244,239,230,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1.3rem}
+.brand img{width:36px;height:36px;border-radius:9px;object-fit:cover;background:var(--ink)}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{text-decoration:none;font-weight:500;color:var(--ink-2);font-size:.96rem}
+.nav-links a:hover{color:var(--ink)}
+.nav-links .btn{padding:10px 18px;font-size:.92rem;color:#fff}
+.menu-btn{display:none;background:none;border:2px solid var(--ink);border-radius:10px;width:44px;height:44px;cursor:pointer;font-size:1.2rem}
+
+.hero{padding:78px 0 50px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;width:520px;height:520px;border-radius:50%;background:var(--accent-soft);right:-250px;top:-210px;z-index:-1}
+.breadcrumbs{font-family:var(--mono);font-size:.78rem;color:var(--muted);margin-bottom:26px}
+.breadcrumbs a{text-decoration:none}
+.breadcrumbs a:hover{color:var(--accent)}
+.hero h1{max-width:900px;margin-bottom:22px}
+.hero h1 .hl{position:relative;white-space:nowrap}
+.hero h1 .hl::after{content:"";position:absolute;left:-4px;right:-4px;bottom:.08em;height:.32em;background:var(--accent);opacity:.9;z-index:-1;border-radius:3px}
+.hero .lede{margin-bottom:28px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font-size:.85rem;color:var(--ink-2);border:1px solid var(--line);background:var(--card);padding:7px 13px;border-radius:999px;display:inline-flex;gap:8px;align-items:center}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
+
+.calc-section{padding:42px 0 100px}
+.calc-shell{display:grid;grid-template-columns:.92fr 1.08fr;gap:24px;align-items:stretch}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:34px}
+.panel-head{margin-bottom:26px}
+.panel-head p{color:var(--muted);margin-top:8px}
+.field{margin-bottom:18px}
+.field label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.9rem;font-weight:600;margin-bottom:7px}
+.field small{font-size:.75rem;color:var(--muted);font-weight:500}
+.field input{width:100%;font-family:var(--body);font-size:1.02rem;padding:14px 15px;border:1.5px solid var(--line);border-radius:12px;background:#fffefa;color:var(--ink);outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,90,31,.12)}
+
+.result{background:var(--ink);color:var(--paper);border-radius:26px;padding:34px;position:relative;overflow:hidden}
+.result::after{content:"$";position:absolute;right:-28px;bottom:-100px;font-family:var(--display);font-size:22rem;font-weight:800;line-height:1;opacity:.045}
+.result .eyebrow{color:#ffb392}
+.big-number{font-family:var(--display);font-size:clamp(3.2rem,7vw,5.8rem);font-weight:800;letter-spacing:-.055em;line-height:.95;color:#fff;margin:8px 0 18px}
+.result-copy{color:#c9c2b2;max-width:620px;position:relative;z-index:1}
+.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:28px 0;position:relative;z-index:1}
+.metric{padding:18px;border:1px solid #3b372e;border-radius:15px;background:var(--night-2)}
+.metric strong{display:block;font-family:var(--display);font-size:1.6rem;line-height:1.1;margin-bottom:4px}
+.metric span{font-size:.82rem;color:#aaa393}
+.disclaimer{color:#928b7d;font-size:.78rem;position:relative;z-index:1}
+
+.audit{margin-top:24px;background:var(--accent);color:#fff;border-radius:22px;padding:26px;position:relative;z-index:1}
+.audit .mini-eyebrow{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.11em;opacity:.9;margin-bottom:7px}
+.audit h3{font-size:1.55rem;margin-bottom:8px}
+.audit p{opacity:.92;margin-bottom:18px}
+.audit-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.audit-form input{width:100%;font-family:var(--body);font-size:.95rem;padding:13px 14px;border:0;border-radius:11px;background:#fff;color:var(--ink);outline:none}
+.audit-form input:focus{box-shadow:0 0 0 3px rgba(22,20,15,.16)}
 .audit-form .wide,.audit-form button,.audit-form .status{grid-column:1/-1}
-.status{font-size:.84rem;color:#9eb3c3}
-@media(max-width:850px){.calc-wrap{grid-template-columns:1fr}.audit-form{grid-template-columns:1fr}.audit-form .wide,.audit-form button,.audit-form .status{grid-column:1}}
+.audit-form .btn{background:var(--ink);border-color:var(--ink);color:#fff;width:100%}
+.status{font-size:.86rem;min-height:1.2em}
+.status.success{color:#fff}
+.status.error{color:#fff4ef}
+
+.explain-strip{background:var(--paper-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:65px 0}
+.explain-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:60px;align-items:start}
+.explain-grid p{color:var(--ink-2)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.step .n{font-family:var(--mono);font-size:.76rem;color:var(--accent);margin-bottom:18px}
+.step strong{font-family:var(--display);font-size:1.15rem;display:block;margin-bottom:6px}
+.step p{font-size:.92rem;color:var(--muted)}
+
+.cta{padding:85px 0}
+.cta-card{background:var(--accent);color:#fff;border-radius:30px;padding:48px;display:flex;align-items:center;justify-content:space-between;gap:30px}
+.cta-card h2{max-width:720px}
+.cta-card p{margin-top:12px;opacity:.9;max-width:620px}
+.cta-card .btn{background:var(--ink);border-color:var(--ink);color:#fff;flex:none}
+
+footer{background:var(--ink);color:#a8a191;border-top:1px solid #3b372e;padding:50px 0 40px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:30px}
+.foot .brand{color:var(--paper);margin-bottom:10px}
+.foot p{max-width:360px;font-size:.93rem}
+.foot-links{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-start}
+.foot-links a{text-decoration:none;font-size:.93rem}
+.foot-links a:hover{color:var(--accent)}
+.copy{margin-top:36px;padding-top:22px;border-top:1px solid #2e2b24;font-size:.85rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+@media(max-width:900px){
+  .calc-shell,.explain-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .cta-card{align-items:flex-start;flex-direction:column}
+  .nav-links{display:none;position:absolute;top:72px;left:0;right:0;background:var(--paper);flex-direction:column;align-items:stretch;padding:18px 24px 24px;gap:16px;border-bottom:1px solid var(--line)}
+  .nav-links.open{display:flex}
+  .nav-links .btn{justify-content:center}
+  .menu-btn{display:block}
+}
+@media(max-width:640px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  .hero{padding-top:55px}
+  .hero h1 .hl{white-space:normal}
+  .panel,.result{padding:24px 20px}
+  .breakdown{grid-template-columns:1fr}
+  .audit-form{grid-template-columns:1fr}
+  .audit-form .wide,.audit-form button,.audit-form .status{grid-column:1}
+  .cta-card{padding:32px 24px}
+  footer{padding-bottom:50px}
+}
 </style>
 </head>
+
 <body>
-<div class="announce"><strong>Free tool:</strong> estimate missed lead value in about 30 seconds.</div>
-<nav class="nav"><div class="container nav-inner"><a class="brand" href="index.html"><img src="JowkariTech logo.png" alt="JowkariTech logo"><span>JowkariTech</span></a><div class="nav-links"><a href="index.html">Home</a><a href="index.html#demo">Live demo</a><a class="btn btn-primary btn-small" href="#audit">Free website audit</a></div></div></nav>
+<div class="topbar"><strong>Free tool:</strong> estimate missed lead value in about 30 seconds.</div>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="https://jowkaritech.com/">
+      <img src="https://jowkaritech.com/JowkariTech%20logo.png" alt="JowkariTech logo">
+      JowkariTech
+    </a>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="https://jowkaritech.com/">Home</a>
+      <a href="https://jowkaritech.com/#features">What it does</a>
+      <a href="https://jowkaritech.com/#pricing">Pricing</a>
+      <a class="btn btn-primary" href="#audit">Free website audit</a>
+    </nav>
+
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">&#9776;</button>
+  </div>
+</header>
+
 <main>
-<section class="subhero"><div class="container">
-<div class="breadcrumbs"><a href="index.html">JowkariTech</a> / Free Missed Lead Calculator</div>
-<span class="eyebrow"><span class="pulse"></span> Free contractor calculator</span>
-<h1>What could missed website leads be <span class="gradient-text">costing your business?</span></h1>
-<p>This is a scenario calculator, not a revenue promise. Enter your own assumptions to estimate the potential value of website inquiries you may be missing.</p>
-</div></section>
-<section class="section"><div class="container calc-wrap">
-<div class="calc-card">
-<h2 style="font-size:2rem">Your assumptions</h2>
-<label for="visitors">Monthly website visitors</label><input id="visitors" type="number" min="0" value="500">
-<label for="inquiry">Visitor-to-inquiry rate (%)</label><input id="inquiry" type="number" min="0" max="100" step=".1" value="5">
-<label for="missed">Inquiries not captured (%)</label><input id="missed" type="number" min="0" max="100" step=".1" value="30">
-<label for="close">Close rate on qualified inquiries (%)</label><input id="close" type="number" min="0" max="100" step=".1" value="35">
-<label for="job">Average customer/job value (C$)</label><input id="job" type="number" min="0" step="10" value="750">
-</div>
-<div class="calc-result">
-<div class="kicker">Estimated potential value</div><div class="big-number" id="monthly">C$0/mo</div>
-<p id="explain" style="color:#9eb4c4"></p>
-<div class="breakdown">
-<div><strong id="leads">0</strong><span>estimated inquiries/month</span></div>
-<div><strong id="lost">0</strong><span>estimated missed inquiries</span></div>
-<div><strong id="customers">0</strong><span>potential missed customers</span></div>
-<div><strong id="annual">C$0</strong><span>annual scenario value</span></div>
-</div>
-<p style="color:#728da0;font-size:.78rem">Illustrative only. Actual traffic, conversion, close rates, job value and results vary. JowkariTech does not guarantee additional leads or sales.</p>
-<div class="audit" id="audit"><div class="kicker">Free lead-capture audit</div><h3 style="margin:7px 0">Want us to look at your website?</h3>
-<p style="color:#9eb4c4;margin-top:0">Send your website and we’ll review where a lead-capture assistant could fit. If it makes sense, you can test JowkariTech free for 30 days.</p>
-<form class="audit-form" id="audit-form">
-<input name="business" placeholder="Business name" required><input name="name" placeholder="Your name" required>
-<input class="wide" name="website" type="url" placeholder="https://yourbusiness.com" required>
-<input name="email" type="email" placeholder="Email" required><input name="phone" type="tel" placeholder="Phone (optional)">
-<button class="btn btn-primary" type="submit">Send my website for a free audit →</button><div class="status" id="status"></div>
-</form></div>
-</div>
-</div></section></main>
-<footer class="footer"><div class="container footer-inner"><div><strong>JowkariTech</strong><br>Website lead-capture AI for service businesses.</div><div><a href="index.html">Home</a></div><div>© <span id="year"></span> JowkariTech</div></div></footer>
+<section class="hero">
+  <div class="wrap">
+    <div class="breadcrumbs"><a href="https://jowkaritech.com/">JowkariTech</a> / Free Missed Lead Calculator</div>
+    <div class="eyebrow">Free calculator for service businesses</div>
+    <h1>What could missed website leads be <span class="hl">costing you?</span></h1>
+    <p class="lede">Use your own traffic, inquiry, close-rate, and job-value assumptions to estimate the potential value of website inquiries that leave before contacting your business.</p>
+    <div class="hero-chips">
+      <span class="chip"><i></i>No signup required</span>
+      <span class="chip"><i></i>Uses your own assumptions</span>
+      <span class="chip"><i></i>Illustrative, not a revenue promise</span>
+    </div>
+  </div>
+</section>
+
+<section class="calc-section">
+  <div class="wrap calc-shell">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Your assumptions</div>
+        <h2>Enter your numbers.</h2>
+        <p>Change any value and the estimate updates instantly.</p>
+      </div>
+
+      <div class="field">
+        <label for="visitors">Monthly website visitors <small>people / month</small></label>
+        <input id="visitors" type="number" min="0" value="500">
+      </div>
+
+      <div class="field">
+        <label for="inquiry">Visitor-to-inquiry rate <small>%</small></label>
+        <input id="inquiry" type="number" min="0" max="100" step=".1" value="5">
+      </div>
+
+      <div class="field">
+        <label for="missed">Inquiries not captured <small>%</small></label>
+        <input id="missed" type="number" min="0" max="100" step=".1" value="30">
+      </div>
+
+      <div class="field">
+        <label for="close">Close rate on qualified inquiries <small>%</small></label>
+        <input id="close" type="number" min="0" max="100" step=".1" value="35">
+      </div>
+
+      <div class="field">
+        <label for="job">Average customer / job value <small>C$</small></label>
+        <input id="job" type="number" min="0" step="10" value="750">
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="eyebrow">Estimated potential value</div>
+      <div class="big-number" id="monthly">C$0/mo</div>
+      <p class="result-copy" id="explain"></p>
+
+      <div class="breakdown">
+        <div class="metric">
+          <strong id="leads">0</strong>
+          <span>estimated inquiries / month</span>
+        </div>
+        <div class="metric">
+          <strong id="lost">0</strong>
+          <span>estimated missed inquiries</span>
+        </div>
+        <div class="metric">
+          <strong id="customers">0</strong>
+          <span>potential missed customers</span>
+        </div>
+        <div class="metric">
+          <strong id="annual">C$0</strong>
+          <span>annual scenario value</span>
+        </div>
+      </div>
+
+      <p class="disclaimer">Illustrative only. Actual traffic, conversion, close rates, job value and results vary. JowkariTech does not guarantee additional leads, customers, or revenue.</p>
+
+      <div class="audit" id="audit">
+        <div class="mini-eyebrow">Free lead-capture audit</div>
+        <h3>Want us to look at your website?</h3>
+        <p>Send your site and we’ll review where a lead-capture assistant could fit. If it makes sense, you can test JowkariTech free for 30 days.</p>
+
+        <form class="audit-form" id="audit-form">
+          <input name="business" placeholder="Business name" required>
+          <input name="name" placeholder="Your name" required>
+          <input class="wide" name="website" type="url" placeholder="https://yourbusiness.com" required>
+          <input name="email" type="email" placeholder="Email" required>
+          <input name="phone" type="tel" placeholder="Phone (optional)">
+          <button class="btn" type="submit">Send my website for a free audit →</button>
+          <div class="status" id="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="explain-strip">
+  <div class="wrap explain-grid">
+    <div>
+      <div class="eyebrow">How it works</div>
+      <h2>A simple scenario, using your numbers.</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <strong>Estimate inquiries</strong>
+        <p>Monthly visitors × your visitor-to-inquiry rate.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <strong>Estimate what gets missed</strong>
+        <p>Potential inquiries × the percentage you believe leaves uncaptured.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <strong>Model potential value</strong>
+        <p>Missed inquiries × close rate × average customer or job value.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <div class="cta-card">
+      <div>
+        <div class="eyebrow" style="color:#fff">30-day free trial</div>
+        <h2>Want your website to capture more of the people already visiting it?</h2>
+        <p>See the JowkariTech website lead-capture AI in action and decide whether it fits your business.</p>
+      </div>
+      <a class="btn" href="https://jowkaritech.com/#demo">Try the live demo →</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="https://jowkaritech.com/">
+          <img src="https://jowkaritech.com/JowkariTech%20logo.png" alt="JowkariTech logo">
+          JowkariTech
+        </a>
+        <p>Website lead capture AI and automation for small businesses. Based in Vancouver, serving clients across Canada.</p>
+      </div>
+
+      <div class="foot-links">
+        <a href="https://jowkaritech.com/">Home</a>
+        <a href="https://jowkaritech.com/ai-receptionist-plumbers.html">Plumbers</a>
+        <a href="https://jowkaritech.com/ai-receptionist-roofers.html">Roofers</a>
+        <a href="https://jowkaritech.com/ai-receptionist-hvac.html">HVAC</a>
+        <a href="https://jowkaritech.com/ai-website-lead-capture-vancouver.html">Vancouver</a>
+      </div>
+    </div>
+
+    <div class="copy">
+      <span>© <span id="year"></span> JowkariTech</span>
+      <a href="#audit" style="color:var(--accent)">Get a free website audit</a>
+    </div>
+  </div>
+</footer>
+
 <script>
-document.getElementById("year").textContent=new Date().getFullYear();
-const ids=["visitors","inquiry","missed","close","job"];
-const money=n=>new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD",maximumFractionDigits:0}).format(Math.max(0,n||0));
-const num=n=>new Intl.NumberFormat("en-CA",{maximumFractionDigits:1}).format(Math.max(0,n||0));
-function calc(){const visitors=+visitorsEl.value||0,inquiry=(+inquiryEl.value||0)/100,missed=(+missedEl.value||0)/100,close=(+closeEl.value||0)/100,job=+jobEl.value||0;const inquiries=visitors*inquiry,lost=inquiries*missed,customers=lost*close,monthly=customers*job;monthlyEl.textContent=money(monthly)+"/mo";leadsEl.textContent=num(inquiries);lostEl.textContent=num(lost);customersEl.textContent=num(customers);annualEl.textContent=money(monthly*12);explain.textContent="Using your assumptions, missed website inquiries could represent about "+money(monthly)+" in potential customer value per month."}
-const visitorsEl=document.getElementById("visitors"),inquiryEl=document.getElementById("inquiry"),missedEl=document.getElementById("missed"),closeEl=document.getElementById("close"),jobEl=document.getElementById("job"),monthlyEl=document.getElementById("monthly"),leadsEl=document.getElementById("leads"),lostEl=document.getElementById("lost"),customersEl=document.getElementById("customers"),annualEl=document.getElementById("annual"),explain=document.getElementById("explain");
-ids.forEach(id=>document.getElementById(id).addEventListener("input",calc));calc();
-const form=document.getElementById("audit-form"),status=document.getElementById("status");
-form.addEventListener("submit",async e=>{e.preventDefault();const btn=form.querySelector("button");btn.disabled=true;btn.textContent="Sending…";status.textContent="";const data=Object.fromEntries(new FormData(form).entries());data.access_key="67b05f47-421b-41f8-837e-c8a12741dc9c";data.subject="New JowkariTech Free Website Audit Lead";data.from_name="JowkariTech Missed Lead Calculator";data.message="Free website lead-capture audit request.";try{const r=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok||!j.success)throw new Error(j.message||"Submission failed");status.textContent="Sent — we’ll review your website and follow up.";form.reset()}catch(err){status.textContent="Could not send. Email jowkaritech@gmail.com instead."}finally{btn.disabled=false;btn.textContent="Send my website for a free audit →"}});
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const menuBtn = document.getElementById("menuBtn");
+const navLinks = document.getElementById("navLinks");
+menuBtn?.addEventListener("click", () => navLinks.classList.toggle("open"));
+navLinks?.querySelectorAll("a").forEach(a =>
+  a.addEventListener("click", () => navLinks.classList.remove("open"))
+);
+
+const ids = ["visitors","inquiry","missed","close","job"];
+const money = n => new Intl.NumberFormat("en-CA", {
+  style:"currency",
+  currency:"CAD",
+  maximumFractionDigits:0
+}).format(Math.max(0, n || 0));
+
+const num = n => new Intl.NumberFormat("en-CA", {
+  maximumFractionDigits:1
+}).format(Math.max(0, n || 0));
+
+const visitorsEl = document.getElementById("visitors");
+const inquiryEl = document.getElementById("inquiry");
+const missedEl = document.getElementById("missed");
+const closeEl = document.getElementById("close");
+const jobEl = document.getElementById("job");
+const monthlyEl = document.getElementById("monthly");
+const leadsEl = document.getElementById("leads");
+const lostEl = document.getElementById("lost");
+const customersEl = document.getElementById("customers");
+const annualEl = document.getElementById("annual");
+const explainEl = document.getElementById("explain");
+
+function calc(){
+  const visitors = +visitorsEl.value || 0;
+  const inquiry = (+inquiryEl.value || 0) / 100;
+  const missed = (+missedEl.value || 0) / 100;
+  const close = (+closeEl.value || 0) / 100;
+  const job = +jobEl.value || 0;
+
+  const inquiries = visitors * inquiry;
+  const lost = inquiries * missed;
+  const customers = lost * close;
+  const monthly = customers * job;
+
+  monthlyEl.textContent = money(monthly) + "/mo";
+  leadsEl.textContent = num(inquiries);
+  lostEl.textContent = num(lost);
+  customersEl.textContent = num(customers);
+  annualEl.textContent = money(monthly * 12);
+
+  explainEl.textContent =
+    "Using your assumptions, missed website inquiries could represent about " +
+    money(monthly) +
+    " in potential customer value per month.";
+}
+
+ids.forEach(id => document.getElementById(id).addEventListener("input", calc));
+calc();
+
+const form = document.getElementById("audit-form");
+const status = document.getElementById("status");
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const btn = form.querySelector("button");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  status.textContent = "";
+  status.className = "status";
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.access_key = "67b05f47-421b-41f8-837e-c8a12741dc9c";
+  data.subject = "New JowkariTech Free Website Audit Lead";
+  data.from_name = "JowkariTech Missed Lead Calculator";
+  data.message = "Free website lead-capture audit request.";
+
+  try {
+    const r = await fetch("https://api.web3forms.com/submit", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"application/json"
+      },
+      body:JSON.stringify(data)
+    });
+
+    const j = await r.json();
+
+    if(!r.ok || !j.success){
+      throw new Error(j.message || "Submission failed");
+    }
+
+    status.textContent = "Sent — we’ll review your website and follow up.";
+    status.className = "status success";
+    form.reset();
+  } catch(err) {
+    console.error(err);
+    status.textContent = "Could not send. Email jowkaritech@gmail.com instead.";
+    status.className = "status error";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
 </script>
-</body></html>
+</body>
+</html>
