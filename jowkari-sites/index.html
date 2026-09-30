@@ -158,7 +158,7 @@ $('industrySearch').oninput=renderIndustryPicker;
 renderFilters();renderIndustryPicker();
 var themes={bold:{a:'#ff5a1f',d:'#171d25'},clean:{a:'#111827',d:'#111827'},blue:{a:'#1689e8',d:'#0d253b'},natural:{a:'#36a875',d:'#173027'}};
 var state={name:'NorthPeak Roofing',industry:'Roofing Contractor',city:'North Vancouver, BC',goal:'Get quote requests',style:'bold',phone:'604-555-0147',email:'hello@northpeakroofing.ca',cta:'Get a free estimate',page:'Home',selected:'',chatbot:false,chatGreeting:'Hi! How can we help with your project?',pages:{}};
-var esc=function(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var uid=function(){return Math.random().toString(36).slice(2,8)};
 function profileFor(name){var i=(name||'').toLowerCase();
 if(i.includes('roof'))return['A stronger roof. A simpler experience.',['Roof Repairs','Roof Replacement','Roof Inspections']];
