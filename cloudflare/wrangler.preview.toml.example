@@ -1,0 +1,9 @@
+name = "jowkari-preview"
+main = "preview-worker.js"
+compatibility_date = "2026-09-30"
+
+[[kv_namespaces]]
+binding = "PREVIEW_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Add PREVIEW_SIGNING_SECRET as a Worker secret, not in this file.
