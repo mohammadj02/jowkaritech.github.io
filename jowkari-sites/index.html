@@ -111,7 +111,7 @@
 
 <script>
 (function(){
-var $=function(id){return document.getElementById(id)};
+var $=function(id){return document.getElementById(id)};var PREVIEW_API='https://jowkari-preview.jowkari-1mh.workers.dev';
 var industries=[
 'Roofing Contractor','Plumber','Electrician','HVAC Contractor','Heat Pump Installer','Solar Installer','General Contractor','Home Builder','Renovation Contractor','Kitchen Renovation','Bathroom Renovation','Basement Renovation','Carpenter','Handyman','Painter','Drywall Contractor','Insulation Contractor','Flooring Contractor','Tile Installer','Cabinet Maker','Countertop Installer','Window Installer','Door Installer','Garage Door Service','Glass Company','Fencing Contractor','Deck Builder','Concrete Contractor','Masonry Contractor','Excavation Contractor','Demolition Contractor','Waterproofing','Restoration Company','Mold Removal','Fireplace Service','Chimney Service','Septic Service','Drainage Contractor','Welder','Metal Fabrication','Scaffolding','Commercial Contractor',
 'Landscaper','Landscape Designer','Lawn Care','Tree Service','Arborist','Garden Maintenance','Irrigation Service','Snow Removal','Pressure Washing','Window Cleaning','Gutter Cleaning','House Cleaning','Commercial Cleaning','Carpet Cleaning','Junk Removal','Moving Company','Pest Control','Pool Service','Hot Tub Service',
@@ -238,18 +238,38 @@ function formatWait(ms){var total=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(to
 function getPreviewSession(){try{return JSON.parse(localStorage.getItem('jowkariPreviewSession')||'null')}catch(e){return null}}
 function setPreviewSession(v){try{localStorage.setItem('jowkariPreviewSession',JSON.stringify(v))}catch(e){}}
 function buildShare(exp){var base=location.origin+location.pathname;var url=base+'?preview='+encode(cleanStateForUrl())+'&exp='+exp;return {url:url,exp:exp}}
-function makeShare(startNew){
+async function startServerPreview(){
+  try{
+    var r=await fetch(PREVIEW_API+'/preview/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({design:cleanStateForUrl()})});
+    var j=await r.json().catch(function(){return {}});
+    if(r.status===429)return {ok:false,retry:Number(j.retry_after_ms||0),server:true};
+    if(!r.ok||!j.ok)throw new Error('preview_backend_unavailable');
+    return {ok:true,url:j.preview_url,exp:Number(j.expires_at),server:true}
+  }catch(e){return null}
+}
+function localPreview(){
   var now=Date.now(),session=getPreviewSession();
-  if(session&&session.exp>now){var live=buildShare(session.exp);setPreviewSession({started:session.started,exp:session.exp,nextAllowed:session.nextAllowed,url:live.url});return {ok:true,url:live.url,exp:session.exp,reused:true}}
-  if(session&&session.nextAllowed>now)return {ok:false,retry:session.nextAllowed-now,nextAllowed:session.nextAllowed};
-  if(!startNew)return {ok:true,url:buildShare(now+30*60*1000).url,exp:now+30*60*1000,draft:true};
+  if(session&&session.exp>now){var live=buildShare(session.exp);setPreviewSession({started:session.started,exp:session.exp,nextAllowed:session.nextAllowed,url:live.url});return {ok:true,url:live.url,exp:session.exp,reused:true,server:false}}
+  if(session&&session.nextAllowed>now)return {ok:false,retry:session.nextAllowed-now,nextAllowed:session.nextAllowed,server:false};
   var exp=now+30*60*1000,nextAllowed=now+3*60*60*1000,x=buildShare(exp);
   setPreviewSession({started:now,exp:exp,nextAllowed:nextAllowed,url:x.url});
-  return {ok:true,url:x.url,exp:exp,reused:false}
+  return {ok:true,url:x.url,exp:exp,reused:false,server:false}
 }
-function showCooldown(retry){alert('Your free preview has finished. You can start another free 30-minute preview in '+formatWait(retry)+'.')}
-function openShareModal(){var x=makeShare(true);if(!x.ok){showCooldown(x.retry);return}$('shareUrl').value=x.url;$('shareModal').classList.add('open');var hasLocal=false;Object.keys(state.pages).forEach(function(p){state.pages[p].forEach(function(s){if(s.image&&s.image.indexOf('data:')===0)hasLocal=true})});$('imageShareNote').textContent=hasLocal?'Your locally uploaded image is visible while editing, but it is not included in the share link yet. Paste an image URL if you need the photo to appear in the shareable preview.':''}
-$('preview').onclick=function(){var x=makeShare(true);if(!x.ok){showCooldown(x.retry);return}window.open(x.url,'_blank')};$('publish').onclick=openShareModal;$('openShare').onclick=function(){window.open($('shareUrl').value,'_blank')};$('copyShare').onclick=async function(){try{await navigator.clipboard.writeText($('shareUrl').value);this.textContent='Copied ✓'}catch(e){$('shareUrl').select();document.execCommand('copy');this.textContent='Copied ✓'}};$('sendFromShare').onclick=function(){$('shareModal').classList.remove('open');$('sendModal').classList.add('open')};$('finish').onclick=function(){$('sendModal').classList.add('open')};document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=function(){$(b.dataset.close).classList.remove('open')}});
+async function makeShare(){
+  var server=await startServerPreview();
+  if(server)return server;
+  return localPreview()
+}
+function showCooldown(retry){alert('This connection already used its free preview. You can start another 30-minute preview in '+formatWait(retry)+'.')}
+async function openShareModal(){
+  var btn=$('publish'),old=btn.textContent;btn.disabled=true;btn.textContent='Creating preview...';
+  var x=await makeShare();btn.disabled=false;btn.textContent=old;
+  if(!x.ok){showCooldown(x.retry);return}
+  $('shareUrl').value=x.url;$('shareModal').classList.add('open');
+  var hasLocal=false;Object.keys(state.pages).forEach(function(p){state.pages[p].forEach(function(s){if(s.image&&s.image.indexOf('data:')===0)hasLocal=true})});
+  $('imageShareNote').textContent=hasLocal?'Your locally uploaded image is visible while editing, but it is not included in the share link yet. Paste an image URL if you need the photo to appear in the shareable preview.':(x.server?'This preview is enforced by JowkariTech server-side: 30 minutes, then a 3-hour IP cooldown.':'Preview protection is using browser fallback until the JowkariTech preview server is deployed.')
+}
+$('preview').onclick=async function(){var x=await makeShare();if(!x.ok){showCooldown(x.retry);return}window.open(x.url,'_blank')};$('publish').onclick=openShareModal;$('openShare').onclick=function(){window.open($('shareUrl').value,'_blank')};$('copyShare').onclick=async function(){try{await navigator.clipboard.writeText($('shareUrl').value);this.textContent='Copied ✓'}catch(e){$('shareUrl').select();document.execCommand('copy');this.textContent='Copied ✓'}};$('sendFromShare').onclick=function(){$('shareModal').classList.remove('open');$('sendModal').classList.add('open')};$('finish').onclick=function(){$('sendModal').classList.add('open')};document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=function(){$(b.dataset.close).classList.remove('open')}});
 document.querySelectorAll('.plan').forEach(function(p){p.onclick=function(){document.querySelectorAll('.plan').forEach(function(x){x.classList.remove('selected')});p.classList.add('selected')}});
 $('send').onclick=async function(){
   var name=$('oname').value.trim(),email=$('oemail').value.trim();
@@ -306,7 +326,19 @@ $('send').onclick=async function(){
   }
 };
 function previewMode(data,exp){state=data;if(Date.now()>exp){document.body.innerHTML='<div class="expired"><div><h1>This free preview expired.</h1><p>Free JowkariTech preview links stay live for 30 minutes. A new free preview can be started after the 3-hour cooldown.</p><a class="btn orange" href="./">Create another design</a></div></div>';return}$('setup').classList.add('hide');$('app').classList.add('hide');$('publicPreview').classList.remove('hide');var th=themes[state.style]||themes.bold;document.documentElement.style.setProperty('--siteAccent',th.a);document.documentElement.style.setProperty('--siteDark',th.d);renderSite($('previewSite'),false);var edit='./';$('editDesign').href=edit;function tick(){var left=Math.max(0,exp-Date.now());if(left<=0){location.reload();return}var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('countdown').textContent=m+':'+String(s).padStart(2,'0')}tick();setInterval(tick,1000);$('copyPreview').onclick=async function(){try{await navigator.clipboard.writeText(location.href);this.textContent='Copied ✓'}catch(e){}}}
-var qs=new URLSearchParams(location.search),pv=qs.get('preview'),exp=Number(qs.get('exp'));if(pv&&exp){try{previewMode(decode(pv),exp)}catch(e){location.href='./'}}else{var saved=localStorage.getItem('jowkariDesign');if(saved){try{var old=JSON.parse(saved);if(old&&old.industry){selectedIndustry=old.industry;state=old;selectIndustry(old.industry);$('sname').value=old.name||'';$('scity').value=old.city||'';$('sphone').value=old.phone||'';$('semail').value=old.email||'';}}catch(e){}}}
+var qs=new URLSearchParams(location.search),previewId=qs.get('preview_id'),pv=qs.get('preview'),exp=Number(qs.get('exp'));
+async function loadServerPreview(id){
+  try{
+    var r=await fetch(PREVIEW_API+'/preview/'+encodeURIComponent(id),{headers:{'Accept':'application/json'}});
+    var j=await r.json().catch(function(){return {}});
+    if(r.status===410){document.body.innerHTML='<div class="expired"><div><h1>This free preview expired.</h1><p>The 30-minute JowkariTech preview is no longer available.</p><a class="btn orange" href="./">Design a website</a></div></div>';return}
+    if(!r.ok||!j.ok)throw new Error();
+    previewMode(j.design,Number(j.expires_at));
+  }catch(e){document.body.innerHTML='<div class="expired"><div><h1>Preview unavailable.</h1><p>This preview could not be loaded right now.</p><a class="btn orange" href="./">Back to Jowkari Sites</a></div></div>'}
+}
+if(previewId){loadServerPreview(previewId)}
+else if(pv&&exp){try{previewMode(decode(pv),exp)}catch(e){location.href='./'}}
+else{var saved=localStorage.getItem('jowkariDesign');if(saved){try{var old=JSON.parse(saved);if(old&&old.industry){selectedIndustry=old.industry;state=old;selectIndustry(old.industry);$('sname').value=old.name||'';$('scity').value=old.city||'';$('sphone').value=old.phone||'';$('semail').value=old.email||'';}}catch(e){}}}
 })();
 </script>
 </body>
