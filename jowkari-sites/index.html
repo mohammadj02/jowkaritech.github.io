@@ -104,7 +104,7 @@
   <div class="two"><div><label class="label">Phone</label><input class="control" id="ophone"></div><div><label class="label">Domain you already own</label><input class="control" id="odomain" placeholder="yourbusiness.com"></div></div>
   <label class="label">Anything else?</label><textarea class="control" id="onotes" rows="3"></textarea>
   <button class="btn orange" id="send" style="width:100%;margin-top:14px">Send my website design →</button>
-  <div class="success" id="success"><b>Design sent.</b> JowkariTech received your website brief.</div><div class="errorBox" id="sendError"></div>
+  <div class="success" id="success"><b>Submission accepted.</b> Keep the project ID shown here.</div><div class="errorBox" id="sendError"></div><button class="btn" id="copyBrief" style="display:none;width:100%;margin-top:8px">Copy project brief</button>
 </div></div>
 
 <script>
@@ -405,31 +405,36 @@ $('send').onclick=async function(){
   var plan=document.querySelector('.plan.selected'),btn=this;
   var projectId='JS-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
   var brief=cleanStateForUrl();
-  var pageSummary=Object.keys(brief.pages||{}).map(function(p){return p+': '+brief.pages[p].map(function(s){return s.type+' — '+(s.title||'')}).join(' | ')}).join('\n');
-  var designText=JSON.stringify(brief);
-  if(designText.length>5500)designText=designText.slice(0,5500)+'…';
-  var message=[
+  var templateName=(templates[state.template]||templates['local-pro']).name;
+  var pageSummary=Object.keys(brief.pages||{}).map(function(p){
+    var titles=(brief.pages[p]||[]).map(function(sec){return sec.title||sec.type}).slice(0,8);
+    return p+': '+titles.join(' / ')
+  }).join('\n');
+  var summary=[
     'JOWKARI SITES DESIGN REQUEST',
     'Project ID: '+projectId,
-    'Customer: '+name+' <'+email+'>',
+    'Customer: '+name,
+    'Customer email: '+email,
     'Phone: '+($('ophone').value.trim()||'Not provided'),
     'Business: '+state.name,
     'Industry: '+state.industry,
-    'City: '+state.city,
+    'City / service area: '+state.city,
     'Package: '+plan.dataset.plan+' C$'+plan.dataset.price,
-    'Domain: '+($('odomain').value.trim()||'Not provided'),
-    'Template: '+((templates[state.template]||templates['local-pro']).name),
+    'Existing domain: '+($('odomain').value.trim()||'Not provided'),
+    'Template: '+templateName,
+    'Heading font: '+(state.font||'Bricolage Grotesque'),
+    'Main CTA: '+state.cta,
     'AI chatbot: '+(state.chatbot?'Yes':'No'),
-    'Permanent design review: '+makeReviewUrl(),
     'Notes: '+($('onotes').value.trim()||'None'),
     '',
-    'PAGES / SECTIONS',
-    pageSummary,
-    '',
-    'DESIGN DATA',
-    designText
+    'PAGES / MAIN SECTIONS',
+    pageSummary
   ].join('\n');
-  btn.disabled=true;btn.textContent='Sending...';$('sendError').style.display='none';$('success').style.display='none';
+
+  window.lastProjectBrief=summary;
+  btn.disabled=true;btn.textContent='Submitting...';
+  $('sendError').style.display='none';$('success').style.display='none';$('copyBrief').style.display='none';
+
   try{
     var r=await fetch('https://api.web3forms.com/submit',{
       method:'POST',
@@ -440,22 +445,35 @@ $('send').onclick=async function(){
         from_name:'Jowkari Sites',
         name:name,
         email:email,
-        review_link:makeReviewUrl(),
-        template:(templates[state.template]||templates['local-pro']).name,
-        message:message,
+        phone:$('ophone').value.trim(),
+        business:state.name,
+        industry:state.industry,
+        package:plan.dataset.plan+' C$'+plan.dataset.price,
+        domain:$('odomain').value.trim()||'Not provided',
+        template:templateName,
+        chatbot:state.chatbot?'Yes':'No',
+        message:summary,
         botcheck:''
       })
     });
     var j=await r.json().catch(function(){return {}});
     if(!r.ok||!j.success)throw new Error(j.message||('Submission failed ('+r.status+')'));
     $('success').style.display='block';
-    $('success').innerHTML='<b>Design sent.</b> Project '+projectId+' was submitted to JowkariTech.';
-    btn.textContent='Sent ✓';
-  }catch(e){
+    $('success').innerHTML='<b>Submission accepted.</b> Project '+projectId+' was accepted by our form service and sent to the JowkariTech inbox.';
+    $('copyBrief').style.display='block';
+    btn.textContent='Submitted ✓';
+  }catch(err){
     btn.disabled=false;btn.textContent='Send my website design →';
     $('sendError').style.display='block';
-    $('sendError').textContent='The request could not be delivered: '+(e.message||'unknown error')+'. Please try again.';
+    $('sendError').textContent='Could not submit: '+(err.message||'unknown error')+'. Please try again.';
+    $('copyBrief').style.display='block';
   }
+};
+$('copyBrief').onclick=async function(){
+  var text=window.lastProjectBrief||'';
+  if(!text)return;
+  try{await navigator.clipboard.writeText(text);this.textContent='Copied ✓'}
+  catch(e){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();this.textContent='Copied ✓'}
 };
 function previewMode(data,exp){state=data;if(Date.now()>exp){document.body.innerHTML='<div class="expired"><div><h1>This free preview expired.</h1><p>Free JowkariTech preview links stay live for 30 minutes. A new free preview can be started after the 3-hour cooldown.</p><a class="btn orange" href="./">Create another design</a></div></div>';return}$('setup').classList.add('hide');$('app').classList.add('hide');$('publicPreview').classList.remove('hide');var th=themes[state.style]||themes.bold;document.documentElement.style.setProperty('--siteAccent',th.a);document.documentElement.style.setProperty('--siteDark',th.d);renderSite($('previewSite'),false);var edit='./';$('editDesign').href=edit;function tick(){var left=Math.max(0,exp-Date.now());if(left<=0){location.reload();return}var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('countdown').textContent=m+':'+String(s).padStart(2,'0')}tick();setInterval(tick,1000);$('copyPreview').onclick=async function(){try{await navigator.clipboard.writeText(location.href);this.textContent='Copied ✓'}catch(e){}}}
 var qs=new URLSearchParams(location.search),review=qs.get('review'),previewId=qs.get('preview_id'),pv=qs.get('preview'),exp=Number(qs.get('exp'));
