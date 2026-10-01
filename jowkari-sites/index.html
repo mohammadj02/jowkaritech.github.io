@@ -150,12 +150,108 @@ function selectIndustry(name){
   var p=profileFor(name);
   $('setupHint').innerHTML='<b>We will start with:</b> '+esc(p[0])+'<br><span>'+p[1].map(esc).join(' • ')+'</span>';
   renderIndustryPicker();
+  renderSetupTemplates();
   setTimeout(function(){$('sname').focus()},80);
 }
 $('industrySearch').oninput=renderIndustryPicker;
 renderFilters();renderIndustryPicker();
-var themes={bold:{a:'#ff5a1f',d:'#171d25'},clean:{a:'#111827',d:'#111827'},blue:{a:'#1689e8',d:'#0d253b'},natural:{a:'#36a875',d:'#173027'}};
-var state={name:'NorthPeak Roofing',industry:'Roofing Contractor',city:'North Vancouver, BC',goal:'Get quote requests',style:'bold',phone:'604-555-0147',email:'hello@northpeakroofing.ca',cta:'Get a free estimate',page:'Home',selected:'',chatbot:false,chatGreeting:'Hi! How can we help with your project?',pages:{}};
+var themes={bold:{a:'#ff5a1f',d:'#171d25'},clean:{a:'#111827',d:'#111827'},blue:{a:'#1689e8',d:'#0d253b'},natural:{a:'#36a875',d:'#173027'},premium:{a:'#a8673a',d:'#1c1713'},dark:{a:'#ff7a45',d:'#0f141a'}};
+var templates={
+  'local-pro':{name:'Local Pro',tag:'Best for local service',desc:'Strong headline, trust-first layout and bold CTA.',style:'bold',className:'local',font:'Bricolage Grotesque'},
+  'clean-trust':{name:'Clean & Trusted',tag:'Simple + professional',desc:'Bright, calm and easy for customers to scan.',style:'clean',className:'clean',font:'Inter'},
+  'premium':{name:'Premium',tag:'High-end look',desc:'Larger imagery and more breathing room.',style:'premium',className:'premium',font:'Bricolage Grotesque'},
+  'editorial':{name:'Editorial',tag:'Image-first',desc:'Big project image with a modern editorial feel.',style:'bold',className:'editorial',font:'Georgia'},
+  'dark-trade':{name:'Dark Trade',tag:'Bold + tough',desc:'High-contrast style for trades and technical businesses.',style:'dark',className:'dark',font:'Bricolage Grotesque'},
+  'friendly':{name:'Friendly',tag:'Warm + approachable',desc:'Soft shapes and welcoming presentation.',style:'natural',className:'friendly',font:'Inter'}
+};
+var selectedTemplate='local-pro';
+var state={name:'NorthPeak Roofing',industry:'Roofing Contractor',city:'North Vancouver, BC',goal:'Get quote requests',style:'bold',template:'local-pro',font:'Bricolage Grotesque',logo:'',phone:'604-555-0147',email:'hello@northpeakroofing.ca',cta:'Get a free estimate',page:'Home',selected:'',chatbot:false,chatGreeting:'Hi! How can we help with your project?',pages:{}};
+
+function mediaFor(name){
+  var c=categoryFor(name),i=(name||'').toLowerCase();
+  if(i.includes('roof')||c==='Construction')return[
+    'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1541976590-713941681591?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1508450859948-4e04fabaa4ea?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Home Services')return[
+    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Auto')return[
+    'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Health')return[
+    'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Beauty & Fitness')return[
+    'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Food')return[
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Events')return[
+    'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Professional'||c==='Education')return[
+    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=82'
+  ];
+  if(c==='Pets')return[
+    'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=1200&q=82'
+  ];
+  return[
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=82',
+    'https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1200&q=82',
+    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=82'
+  ]
+}
+function renderSetupTemplates(){
+  var box=$('setupTemplates');if(!box)return;
+  var hero=(mediaFor(selectedIndustry||state.industry)[0]||'');
+  box.innerHTML=Object.keys(templates).map(function(k){var t=templates[k];return '<button class="templateCard '+(k===selectedTemplate?'active':'')+'" data-template="'+k+'"><div class="templateThumb" style="background-image:url('+JSON.stringify(hero)+')"><span class="templateBadge">'+esc(t.tag)+'</span></div><b>'+esc(t.name)+'</b><small>'+esc(t.desc)+'</small></button>'}).join('');
+  box.querySelectorAll('[data-template]').forEach(function(b){b.onclick=function(){selectedTemplate=b.dataset.template;state.template=selectedTemplate;state.style=templates[selectedTemplate].style;state.font=templates[selectedTemplate].font;renderSetupTemplates()}});
+}
+function applyTemplate(key){
+  if(!templates[key])return;
+  selectedTemplate=key;state.template=key;state.style=templates[key].style;state.font=templates[key].font;render()
+}
+function renderEditorTemplates(){
+  var box=$('editorTemplates');if(!box)return;
+  var hero=(mediaFor(state.industry)[0]||'');
+  box.innerHTML=Object.keys(templates).map(function(k){var t=templates[k];return '<button class="editorTemplate '+(k===state.template?'active':'')+'" data-editor-template="'+k+'"><div class="miniShot" style="background-image:url('+JSON.stringify(hero)+')"></div><b>'+esc(t.name)+'</b></button>'}).join('');
+  box.querySelectorAll('[data-editor-template]').forEach(function(b){b.onclick=function(){applyTemplate(b.dataset.editorTemplate)}});
+}
+function renderPhotoLibrary(){
+  var box=$('photoLibrary');if(!box)return;
+  var imgs=mediaFor(state.industry);
+  box.innerHTML=imgs.map(function(url){return '<button class="photoTile" data-photo="'+esc(url)+'" style="background-image:url('+JSON.stringify(url)+')"></button>'}).join('');
+  box.querySelectorAll('[data-photo]').forEach(function(b){b.onclick=function(){var s=find(state.selected);if(!s){alert('Click a Hero, About or Gallery section first.');return}s.image=b.dataset.photo;if(s.type==='gallery')s.images=imgs.slice(0,3);render()}});
+}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 var uid=function(){return Math.random().toString(36).slice(2,8)};
 function profileFor(name){var i=(name||'').toLowerCase();
@@ -196,6 +292,7 @@ if(i.includes('dog')||i.includes('pet')||i.includes('vet'))return['Better care f
 if(i.includes('hotel')||i.includes('travel')||i.includes('tour')||i.includes('vacation'))return['Make the next trip easier to plan.',['Bookings','Packages','Guest Support']];
 return['Professional '+name+' made easier.',['Popular Service','Second Service','Specialty Service']]}
 function profile(){return profileFor(state.industry)}
+renderSetupTemplates();
 function make(type){var p=profile(),s={id:uid(),type:type,title:'',body:'',image:''};if(type==='hero'){s.kicker='Trusted '+state.industry;s.title=p[0];s.body='Professional local service in '+state.city+' with clear communication and an easy way to get started.'}if(type==='services'){s.kicker='Services';s.title='Everything you need, handled properly.';s.body='Clear services and a straightforward next step.';s.items=p[1]}if(type==='about'){s.kicker='About us';s.title='Local expertise. Professional standards.';s.body='We help customers in '+state.city+' with dependable service, clear communication and quality work.'}if(type==='gallery'){s.kicker='Recent work';s.title='See the quality before you call.';s.body='Add your best project photos here.'}if(type==='reviews'){s.kicker='Reviews';s.title='Customers notice the difference.';s.body='Real feedback builds trust before someone contacts you.'}if(type==='faq'){s.kicker='FAQ';s.title='Questions, answered.';s.body='How quickly can I get a quote? Usually within one business day.\nWhat areas do you serve? '+state.city+' and nearby communities.'}if(type==='cta'){s.title='Ready to get started?';s.body='Tell us what you need and we will get back to you with the next step.'}if(type==='contact'){s.kicker='Contact';s.title='Tell us about your project.';s.body='Send a few details and we will get back to you.'}return s}
 function generate(){
   if(!selectedIndustry){alert('Choose your business type first.');return}
