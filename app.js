@@ -32,6 +32,16 @@ let chatBusy = false;
 const welcomeMessage =
   "Hi! I'm the JowkariTech AI assistant. Tell me what kind of business you run and I'll explain how an AI receptionist could help you.";
 
+function getCurrentPricingReply(message) {
+  const q = (message || "").toLowerCase();
+
+  if (!/(price|pricing|cost|how much|plan|included|79|99|179|299)/.test(q)) {
+    return "";
+  }
+
+  return "Current JowkariTech launch pricing is Starter C$99, Business C$179, and Pro + AI C$299. These are the website launch prices shown on jowkaritech.com. Any ongoing hosting, maintenance, or custom AI service cost depends on the setup and should be confirmed with JowkariTech.";
+}
+
 
 function scrollChat() {
   if (!chatLog) return;
@@ -179,6 +189,30 @@ async function sendAIMessage(message) {
 
   chatInput.value = "";
   chatInput.disabled = true;
+
+  const localPricingReply =
+    getCurrentPricingReply(clean);
+
+  if (localPricingReply) {
+    createMessage(
+      localPricingReply,
+      "assistant"
+    );
+
+    chatHistory.push({
+      role: "assistant",
+      content: localPricingReply
+    });
+
+    chatHistory =
+      chatHistory.slice(-10);
+
+    chatBusy = false;
+    chatInput.disabled = false;
+    chatInput.focus();
+
+    return;
+  }
 
 
   const typing =
