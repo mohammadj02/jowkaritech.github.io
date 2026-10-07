@@ -53,7 +53,7 @@
       <label class="label">Choose a ready website template</label>
       <div class="templateGrid" id="setupTemplates"></div>
       <div class="setupHint" id="setupHint">Choose a business on the left. The headline, services, calls-to-action and page content will change for that industry.</div>
-      <button class="generate" id="generate">Create my customized website →</button>
+      <button class="generate" id="generate">Generate my website →</button>
     </div>
   </div>
 </div>
@@ -62,7 +62,7 @@
 <div id="app" class="hide">
   <header class="top">
     <div class="topLeft"><a class="brand" href="../"><img src="../JowkariTech%20logo.png" alt=""><span>Jowkari Sites</span></a><div class="project"><b id="pname"></b><span id="pmeta"></span></div><span class="status">SAVED</span></div>
-    <div class="topRight"><button class="btn smallHide" id="device">Mobile</button><button class="btn" id="preview">Preview + copy link</button><button class="btn orange" id="publish">Publish free preview</button><button class="btn dark smallHide" id="finish">Send to JowkariTech</button></div>
+    <div class="topRight"><button class="btn smallHide" id="device">Mobile</button><button class="btn" id="preview">Preview + copy link</button><button class="btn orange" id="publish">Publish free preview</button><button class="btn dark smallHide" id="finish">Launch this site</button></div>
   </header>
   <div class="editor">
     <aside class="panel left">
@@ -89,27 +89,27 @@
 <div class="modal" id="shareModal"><div class="modalCard">
   <div style="display:flex;justify-content:space-between;gap:16px"><div><div class="eyebrow">Free publish</div><h2>Your shareable preview is ready.</h2><p class="muted">Anyone with this link can view this exact design for 30 minutes. Every customer gets their own unique link, even if they started from the same template.</p></div><button class="btn" data-close="shareModal">×</button></div>
   <div class="shareRow"><input id="shareUrl" readonly><button class="btn orange" id="copyShare">Copy link</button></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark" id="openShare">Open preview</button><button class="btn" id="sendFromShare">Send this design to JowkariTech</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn dark" id="openShare">Open preview</button><button class="btn" id="sendFromShare">Request launch for this design</button></div>
   <p class="note" id="imageShareNote"></p><div class="cooldownBox"><b>Free preview rule:</b> 30 minutes of public preview, then a 3-hour cooldown before a new free preview can be started.</div>
 </div></div>
 
 <div class="modal" id="sendModal"><div class="modalCard">
-  <div style="display:flex;justify-content:space-between;gap:16px"><div><div class="eyebrow">We build the real website</div><h2>Send us exactly what you designed.</h2><p class="muted">We use your design as the brief, finish the production site, connect your domain and launch it after you approve it.</p></div><button class="btn" data-close="sendModal">×</button></div>
+  <div style="display:flex;justify-content:space-between;gap:16px"><div><div class="eyebrow">Choose how you want to launch</div><h2>Your website is ready for the next step.</h2><p class="muted">Pick a launch plan, send the design to JowkariTech and we will connect the production site to your domain after approval. Live subscription checkout is being activated; this request does not charge your card.</p></div><button class="btn" data-close="sendModal">×</button></div>
   <div class="plans">
-    <div class="plan selected" data-plan="Starter" data-price="99"><div class="price">C$99</div><b>Starter</b><br><small>1-page website, form, basic SEO, domain connection.</small></div>
-    <div class="plan" data-plan="Business" data-price="179"><div class="price">C$179</div><b>Business</b><br><small>Up to 5 pages, forms, gallery, reviews, local SEO.</small></div>
-    <div class="plan" data-plan="Pro" data-price="299"><div class="price">C$299</div><b>Pro</b><br><small>Business site + AI chatbot and advanced setup.</small></div>
+    <div class="plan selected" data-plan="Launch" data-price="29/mo"><div class="price">C$29<small>/mo</small></div><b>Launch</b><br><small>Hosted website, custom domain connection, SSL, form and basic local SEO.</small></div>
+    <div class="plan" data-plan="Growth" data-price="79/mo"><div class="price">C$79<small>/mo</small></div><b>Growth</b><br><small>Multi-page site, lead-focused setup, booking-ready flow, AI chatbot and priority changes.</small></div>
+    <div class="plan" data-plan="Done For You" data-price="150 flat"><div class="price">C$150</div><b>Done For You</b><br><small>One-time design/setup service. Domain renewal or third-party services remain separate when applicable.</small></div>
   </div>
   <div class="two"><div><label class="label">Your name</label><input class="control" id="oname"></div><div><label class="label">Email</label><input class="control" id="oemail"></div></div>
   <div class="two"><div><label class="label">Phone</label><input class="control" id="ophone"></div><div><label class="label">Domain you already own</label><input class="control" id="odomain" placeholder="yourbusiness.com"></div></div>
   <label class="label">Anything else?</label><textarea class="control" id="onotes" rows="3"></textarea>
-  <button class="btn orange" id="send" style="width:100%;margin-top:14px">Send my website design →</button>
+  <button class="btn orange" id="send" style="width:100%;margin-top:14px">Request launch →</button>
   <div class="success" id="success"><b>Submission accepted.</b> Keep the project ID shown here.</div><div class="errorBox" id="sendError"></div><button class="btn" id="copyBrief" style="display:none;width:100%;margin-top:8px">Copy project brief</button>
 </div></div>
 
 <script>
 (function(){
-var $=function(id){return document.getElementById(id)};var PREVIEW_API='https://jowkari-preview.jowkari-1mh.workers.dev';
+var $=function(id){return document.getElementById(id)};var PREVIEW_API='https://jowkari-preview.jowkari-1mh.workers.dev';var quickServices=[];
 var industries=[
 'Roofing Contractor','Plumber','Electrician','HVAC Contractor','Heat Pump Installer','Solar Installer','General Contractor','Home Builder','Renovation Contractor','Kitchen Renovation','Bathroom Renovation','Basement Renovation','Carpenter','Handyman','Painter','Drywall Contractor','Insulation Contractor','Flooring Contractor','Tile Installer','Cabinet Maker','Countertop Installer','Window Installer','Door Installer','Garage Door Service','Glass Company','Fencing Contractor','Deck Builder','Concrete Contractor','Masonry Contractor','Excavation Contractor','Demolition Contractor','Waterproofing','Restoration Company','Mold Removal','Fireplace Service','Chimney Service','Septic Service','Drainage Contractor','Welder','Metal Fabrication','Scaffolding','Commercial Contractor',
 'Landscaper','Landscape Designer','Lawn Care','Tree Service','Arborist','Garden Maintenance','Irrigation Service','Snow Removal','Pressure Washing','Window Cleaning','Gutter Cleaning','House Cleaning','Commercial Cleaning','Carpet Cleaning','Junk Removal','Moving Company','Pest Control','Pool Service','Hot Tub Service',
@@ -318,6 +318,7 @@ function generate(){
   state.style=(templates[state.template]||templates['local-pro']).style;
   state.font=(templates[state.template]||templates['local-pro']).font;
   state.pages={Home:[make('hero'),make('services'),make('about'),make('gallery'),make('reviews'),make('cta'),make('contact')],Services:[make('hero'),make('services'),make('faq'),make('cta')],About:[make('hero'),make('about'),make('reviews'),make('cta')],Contact:[make('hero'),make('contact')]};
+  if(quickServices.length){Object.keys(state.pages).forEach(function(p){var sec=(state.pages[p]||[]).find(function(x){return x.type==='services'});if(sec){var fill=quickServices.slice(0,3);while(fill.length<3)fill.push((profile()[1]||[])[fill.length]||'Professional service');sec.items=fill}})}
   $('setup').classList.add('hide');$('app').classList.remove('hide');render()
 }
 document.querySelectorAll('.style').forEach(function(b){b.onclick=function(){document.querySelectorAll('.style').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.style=b.dataset.style}});
@@ -463,7 +464,7 @@ $('send').onclick=async function(){
     $('copyBrief').style.display='block';
     btn.textContent='Submitted ✓';
   }catch(err){
-    btn.disabled=false;btn.textContent='Send my website design →';
+    btn.disabled=false;btn.textContent='Request launch →';
     $('sendError').style.display='block';
     $('sendError').textContent='Could not submit: '+(err.message||'unknown error')+'. Please try again.';
     $('copyBrief').style.display='block';
@@ -489,7 +490,29 @@ async function loadServerPreview(id){
 if(review){try{previewMode(decode(review),Date.now()+3650*24*60*60*1000);$('previewBar').querySelector('b').textContent='JowkariTech Submitted Design';$('previewBar').querySelector('.meta').textContent='Permanent customer design review';$('editDesign').style.display='none'}catch(e){location.href='./'}}
 else if(previewId){loadServerPreview(previewId)}
 else if(pv&&exp){try{previewMode(decode(pv),exp)}catch(e){location.href='./'}}
-else{var saved=localStorage.getItem('jowkariDesign');if(saved){try{var old=JSON.parse(saved);if(old&&old.industry){selectedIndustry=old.industry;state=old;selectIndustry(old.industry);$('sname').value=old.name||'';$('scity').value=old.city||'';$('sphone').value=old.phone||'';$('semail').value=old.email||'';}}catch(e){}}}
+else{
+  var quick=qs.get('quick')==='1';
+  if(quick){
+    var requested=(qs.get('industry')||'').trim();
+    var aliases={'Other':'Consultant','Roofing':'Roofing Contractor','Cleaning':'House Cleaning','Salon':'Hair Salon','Mechanic':'Auto Repair'};
+    if(aliases[requested])requested=aliases[requested];
+    var match=industries.find(function(x){return x.toLowerCase()===requested.toLowerCase()})||industries.find(function(x){return x.toLowerCase().includes(requested.toLowerCase())});
+    if(!match)match='Consultant';
+    selectIndustry(match);
+    $('sname').value=(qs.get('name')||'').trim();
+    $('scity').value=(qs.get('city')||'North Vancouver, BC').trim();
+    $('sphone').value=(qs.get('phone')||'').trim();
+    $('semail').value=(qs.get('email')||'').trim();
+    quickServices=(qs.get('services')||'').split(',').map(function(x){return x.trim()}).filter(Boolean).slice(0,6);
+    if(qs.get('source')){
+      $('setupHint').innerHTML='<b>Redesign reference:</b> '+esc(qs.get('source'))+'<br><span>Use your existing site as a reference while you rebuild the layout here.</span>';
+    }
+    if(qs.get('autostart')==='1')setTimeout(generate,120);
+  }else{
+    var saved=localStorage.getItem('jowkariDesign');
+    if(saved){try{var old=JSON.parse(saved);if(old&&old.industry){selectedIndustry=old.industry;state=old;selectIndustry(old.industry);$('sname').value=old.name||'';$('scity').value=old.city||'';$('sphone').value=old.phone||'';$('semail').value=old.email||'';}}catch(e){}}
+  }
+}
 })();
 </script>
 </body>
