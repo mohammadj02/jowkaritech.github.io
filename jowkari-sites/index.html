@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jowkari Sites | Design Your Website Free</title>
-<meta name="description" content="Design your business website exactly how you want it, share a free preview, then have JowkariTech professionally build and launch it.">
+<title>Free AI Website Builder Vancouver | JowkariTech</title>
+<meta name="description" content="Generate and edit a small-business website free with JowkariTech's AI-assisted website builder. Built in North Vancouver for local businesses across Canada.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://jowkaritech.com/jowkari-sites/">
 <meta name="theme-color" content="#f4efe6">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Jowkari Sites","url":"https://jowkaritech.com/jowkari-sites/","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"CAD","description":"Free website generation and editing preview"},"provider":{"@type":"Organization","name":"JowkariTech","url":"https://jowkaritech.com/","logo":"https://jowkaritech.com/JowkariTech%20logo.png"}}</script>
 <link rel="icon" href="../JowkariTech%20logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,7 +56,7 @@
       <label class="label">Choose a ready website template</label>
       <div class="templateGrid" id="setupTemplates"></div>
       <div class="setupHint" id="setupHint">Choose a business on the left. The headline, services, calls-to-action and page content will change for that industry.</div>
-      <button class="generate" id="generate">Generate my website →</button>
+      <button class="generate" id="generate">Generate with AI →</button>
     </div>
   </div>
 </div>
@@ -305,8 +308,10 @@ function make(type){
   if(type==='contact'){s.kicker='Contact';s.title='Tell us about your project.';s.body='Send a few details and we will get back to you.'}
   return s
 }
-function generate(){
+async function generate(){
   if(!selectedIndustry){alert('Choose your business type first.');return}
+  var genBtn=$('generate'),oldText=genBtn.textContent;
+  genBtn.disabled=true;genBtn.textContent='Generating with AI...';
   state.name=$('sname').value.trim()||selectedIndustry;
   state.industry=selectedIndustry;
   state.city=$('scity').value.trim()||'Your service area';
@@ -319,6 +324,32 @@ function generate(){
   state.font=(templates[state.template]||templates['local-pro']).font;
   state.pages={Home:[make('hero'),make('services'),make('about'),make('gallery'),make('reviews'),make('cta'),make('contact')],Services:[make('hero'),make('services'),make('faq'),make('cta')],About:[make('hero'),make('about'),make('reviews'),make('cta')],Contact:[make('hero'),make('contact')]};
   if(quickServices.length){Object.keys(state.pages).forEach(function(p){var sec=(state.pages[p]||[]).find(function(x){return x.type==='services'});if(sec){var fill=quickServices.slice(0,3);while(fill.length<3)fill.push((profile()[1]||[])[fill.length]||'Professional service');sec.items=fill}})}
+  try{
+    var ai=await fetch('https://jowkari-ai.jowkari-1mh.workers.dev/generate-site',{
+      method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({name:state.name,industry:state.industry,city:state.city,services:quickServices})
+    });
+    var aj=await ai.json().catch(function(){return {}});
+    if(ai.ok&&aj.ok&&aj.content){
+      var x=aj.content;
+      Object.keys(state.pages).forEach(function(page){
+        (state.pages[page]||[]).forEach(function(sec){
+          if(sec.type==='hero'){if(x.headline)sec.title=x.headline;if(x.subheadline)sec.body=x.subheadline}
+          if(sec.type==='services'){
+            if(x.serviceSectionTitle)sec.title=x.serviceSectionTitle;
+            if(x.serviceSectionBody)sec.body=x.serviceSectionBody;
+            if(Array.isArray(x.services)&&x.services.length){
+              sec.items=x.services.slice(0,3).map(function(s){return s.name}).filter(Boolean);
+              sec.itemDescriptions=x.services.slice(0,3).map(function(s){return s.description||''});
+            }
+          }
+          if(sec.type==='about'){if(x.aboutTitle)sec.title=x.aboutTitle;if(x.aboutBody)sec.body=x.aboutBody}
+          if(sec.type==='cta'){if(x.ctaHeadline)sec.title=x.ctaHeadline;if(x.ctaBody)sec.body=x.ctaBody}
+        })
+      })
+    }
+  }catch(e){console.warn('AI generation unavailable; using local template.',e)}
+  genBtn.disabled=false;genBtn.textContent=oldText;
   $('setup').classList.add('hide');$('app').classList.remove('hide');render()
 }
 document.querySelectorAll('.style').forEach(function(b){b.onclick=function(){document.querySelectorAll('.style').forEach(function(x){x.classList.remove('active')});b.classList.add('active');state.style=b.dataset.style}});
@@ -338,10 +369,10 @@ function sectionHTML(s,editable){
   var img=s.image?' style="background-image:url('+JSON.stringify(s.image)+')"':'';
   var open='<section class="sec'+sel+'" data-sec="'+s.id+'"'+(editable?' draggable="true"':'')+'><div class="siteWrap">'+tools,close='</div></section>';
   if(s.type==='hero')return open+'<div class="heroGrid"><div>'+k+'<h1'+ed+' data-field="'+s.id+':title">'+esc(s.title)+'</h1>'+body+'<p><span class="siteBtn">'+esc(state.cta)+'</span></p></div><div class="visual"'+img+'></div></div>'+close;
-  if(s.type==='services')return open+k+title+body+'<div class="cards">'+(s.items||[]).map(function(x,i){var u=(s.images||[])[i]||'';return '<div class="card">'+(u?'<div class="servicePhoto" style="background-image:url('+JSON.stringify(u)+')"></div>':'')+'<h3>'+esc(x)+'</h3><p class="lead">Professional service with a clear process and an easy next step.</p></div>'}).join('')+'</div>'+close;
+  if(s.type==='services')return open+k+title+body+'<div class="cards">'+(s.items||[]).map(function(x,i){var u=(s.images||[])[i]||'',d=(s.itemDescriptions||[])[i]||'Professional service with a clear process and an easy next step.';return '<div class="card">'+(u?'<div class="servicePhoto" style="background-image:url('+JSON.stringify(u)+')"></div>':'')+'<h3>'+esc(x)+'</h3><p class="lead">'+esc(d)+'</p></div>'}).join('')+'</div>'+close;
   if(s.type==='about')return open+'<div class="split"><div class="visual"'+img+'></div><div>'+k+title+body+'<p><b>Local • Responsive • Professional</b></p></div></div>'+close;
   if(s.type==='gallery'){var gi=s.images&&s.images.length?s.images:mediaFor(state.industry);return open+k+title+body+'<div class="gallery">'+gi.slice(0,3).map(function(u){return '<div class="shot" style="background-image:url('+JSON.stringify(u)+')"></div>'}).join('')+'</div>'+close}
-  if(s.type==='reviews')return open+k+title+body+'<div class="reviews"><div class="card">★★★★★<p>Great communication and excellent work from start to finish.</p><b>Local customer</b></div><div class="card">★★★★★<p>Professional, clear and easy to work with.</p><b>Verified customer</b></div><div class="card">★★★★★<p>Exactly what we needed and the process was simple.</p><b>Recent customer</b></div></div>'+close;
+  if(s.type==='reviews')return open+k+title+body+'<div class="reviews"><div class="card"><b>Add a real customer review</b><p class="lead">Replace this placeholder with feedback you have permission to publish.</p></div><div class="card"><b>Add another real review</b><p class="lead">Use the customer’s actual words and name only with permission.</p></div><div class="card"><b>Build trust with real proof</b><p class="lead">You can also use a project photo, certification or other verifiable proof.</p></div></div>'+close;
   if(s.type==='cta')return open+'<div class="ctaBox">'+title+body+'<p><span class="siteBtn">'+esc(state.cta)+'</span></p></div>'+close;
   if(s.type==='contact')return open+k+title+body+'<div class="form"><input placeholder="Name"><input placeholder="Phone"><textarea placeholder="Tell us what you need"></textarea></div>'+close;
   return open+k+title+body+close
