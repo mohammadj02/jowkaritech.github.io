@@ -75,6 +75,81 @@ export default {
       }, 200, origin);
     }
 
+    if (url.pathname === "/generate-site" && request.method === "POST") {
+      if (!ALLOWED_ORIGINS.has(origin)) {
+        return json({ error: "origin_not_allowed" }, 403, origin);
+      }
+      if (!env.AI) return json({ error: "ai_binding_missing" }, 503, origin);
+
+      let body;
+      try { body = await request.json(); }
+      catch { return json({ error: "invalid_json" }, 400, origin); }
+
+      const name = clean(body?.name, 120);
+      const industry = clean(body?.industry, 120);
+      const city = clean(body?.city, 120);
+      const services = Array.isArray(body?.services)
+        ? body.services.map(x => clean(x, 100)).filter(Boolean).slice(0, 6)
+        : [];
+
+      if (!name || !industry || !city) {
+        return json({ error: "name_industry_city_required" }, 400, origin);
+      }
+
+      const prompt = `Create concise conversion-focused website copy for a real small business.
+Business name: ${name}
+Industry: ${industry}
+City/service area: ${city}
+Services supplied by owner: ${services.join(", ") || "none supplied"}
+
+Return ONLY valid JSON with exactly this shape:
+{
+  "headline":"8-12 words",
+  "subheadline":"18-35 words",
+  "aboutTitle":"5-9 words",
+  "aboutBody":"30-55 words",
+  "serviceSectionTitle":"5-9 words",
+  "serviceSectionBody":"12-25 words",
+  "services":[
+    {"name":"service name","description":"10-20 words"},
+    {"name":"service name","description":"10-20 words"},
+    {"name":"service name","description":"10-20 words"}
+  ],
+  "ctaHeadline":"5-9 words",
+  "ctaBody":"12-25 words"
+}
+
+Rules:
+- Sound local, clear, credible and human.
+- Do not invent years in business, awards, certifications, prices, reviews, guarantees, emergency availability, licenses, response times or customer counts.
+- Do not make unverifiable superlative claims such as best, #1, leading or top-rated.
+- Use the supplied services when present.
+- Mention the city naturally, not repeatedly.
+- Keep text useful for customers deciding whether to call, request a quote or book.
+- No markdown and no text outside JSON.`;
+
+      try {
+        const result = await env.AI.run(MODEL, {
+          messages: [
+            { role: "system", content: "You write truthful small-business website copy and output strict JSON only." },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: 650,
+          temperature: 0.45
+        });
+        const raw =
+          (typeof result?.response === "string" && result.response.trim()) ||
+          (typeof result?.choices?.[0]?.message?.content === "string" && result.choices[0].message.content.trim()) ||
+          "";
+        const parsed = parseJsonObject(raw);
+        if (!parsed) return json({ error: "invalid_model_json" }, 502, origin);
+        return json({ ok: true, content: sanitizeSiteCopy(parsed, services) }, 200, origin);
+      } catch (error) {
+        console.error("Workers AI site generation error", error);
+        return json({ error: "ai_request_failed" }, 502, origin);
+      }
+    }
+
     if (url.pathname !== "/chat" || request.method !== "POST") {
       return json({ error: "not_found" }, 404, origin);
     }
@@ -133,6 +208,45 @@ export default {
     }
   }
 };
+
+function clean(value, max) {
+  return typeof value === "string" ? value.trim().replace(/\s+/g, " ").slice(0, max) : "";
+}
+
+function parseJsonObject(raw) {
+  if (!raw) return null;
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  try { return JSON.parse(cleaned); } catch {}
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { return null; }
+}
+
+function sanitizeSiteCopy(x, suppliedServices) {
+  const safe = (v, max) => clean(v, max);
+  let services = Array.isArray(x?.services) ? x.services.slice(0, 3).map(s => ({
+    name: safe(s?.name, 80),
+    description: safe(s?.description, 180)
+  })).filter(s => s.name) : [];
+  if (!services.length && suppliedServices.length) {
+    services = suppliedServices.slice(0, 3).map(name => ({
+      name,
+      description: "Professional service with a clear process and an easy next step."
+    }));
+  }
+  return {
+    headline: safe(x?.headline, 140),
+    subheadline: safe(x?.subheadline, 320),
+    aboutTitle: safe(x?.aboutTitle, 120),
+    aboutBody: safe(x?.aboutBody, 480),
+    serviceSectionTitle: safe(x?.serviceSectionTitle, 120),
+    serviceSectionBody: safe(x?.serviceSectionBody, 260),
+    services,
+    ctaHeadline: safe(x?.ctaHeadline, 120),
+    ctaBody: safe(x?.ctaBody, 260)
+  };
+}
 
 function cors(origin) {
   const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "https://jowkaritech.com";
