@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Free AI Website Builder Vancouver | JowkariTech</title>
-<meta name="description" content="Generate and edit a small-business website free with JowkariTech's AI-assisted website builder. Built in North Vancouver for local businesses across Canada.">
+<meta name="description" content="Create a free editable business website with JowkariTech's AI-assisted builder. Choose from dozens of trades and services, customize the design and preview it on mobile.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://jowkaritech.com/jowkari-sites/">
 <meta name="theme-color" content="#f4efe6">
@@ -39,7 +39,7 @@
 
 <section id="setup">
 <div class="setupWrap">
-  <div class="setupNav"><a class="brand" href="../"><img src="../JowkariTech%20logo.png" alt=""><span>Jowkari Sites<small>by JowkariTech</small></span></a><a class="btn" href="../">← JowkariTech</a></div>
+  <div class="setupNav"><a class="brand" href="../"><img src="../JowkariTech%20logo.png" alt="JowkariTech logo"><span>Jowkari Sites<small>by JowkariTech</small></span></a><a class="btn" href="../">← JowkariTech</a></div>
   <div class="setupGrid">
     <div class="businessPicker">
       <div class="pickerHead"><div><div class="eyebrow">Step 1</div><h2>What kind of business do you have?</h2><p>Choose one and we will build the starting website around that business.</p></div><span class="businessCount" id="businessCount">140+ types</span></div>
@@ -64,7 +64,7 @@
 
 <div id="app" class="hide">
   <header class="top">
-    <div class="topLeft"><a class="brand" href="../"><img src="../JowkariTech%20logo.png" alt=""><span>Jowkari Sites</span></a><div class="project"><b id="pname"></b><span id="pmeta"></span></div><span class="status">SAVED</span></div>
+    <div class="topLeft"><a class="brand" href="../"><img src="../JowkariTech%20logo.png" alt="JowkariTech logo"><span>Jowkari Sites</span></a><div class="project"><b id="pname"></b><span id="pmeta"></span></div><span class="status">SAVED</span></div>
     <div class="topRight"><button class="btn smallHide" id="device">Mobile</button><button class="btn" id="preview">Preview + copy link</button><button class="btn orange" id="publish">Publish free preview</button><button class="btn dark smallHide" id="finish">Launch this site</button></div>
   </header>
   <div class="editor">
@@ -507,7 +507,7 @@ $('copyBrief').onclick=async function(){
   try{await navigator.clipboard.writeText(text);this.textContent='Copied ✓'}
   catch(e){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();this.textContent='Copied ✓'}
 };
-function previewMode(data,exp){state=data;if(Date.now()>exp){document.body.innerHTML='<div class="expired"><div><h1>This free preview expired.</h1><p>Free JowkariTech preview links stay live for 30 minutes. A new free preview can be started after the 3-hour cooldown.</p><a class="btn orange" href="./">Create another design</a></div></div>';return}$('setup').classList.add('hide');$('app').classList.add('hide');$('publicPreview').classList.remove('hide');var th=themes[state.style]||themes.bold;document.documentElement.style.setProperty('--siteAccent',th.a);document.documentElement.style.setProperty('--siteDark',th.d);renderSite($('previewSite'),false);var edit='./';$('editDesign').href=edit;function tick(){var left=Math.max(0,exp-Date.now());if(left<=0){location.reload();return}var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('countdown').textContent=m+':'+String(s).padStart(2,'0')}tick();setInterval(tick,1000);$('copyPreview').onclick=async function(){try{await navigator.clipboard.writeText(location.href);this.textContent='Copied ✓'}catch(e){}}}
+function previewMode(data,exp){state=data;if(Date.now()>exp){document.body.innerHTML='<div class="expired"><div><h2>This free preview expired.</h2><p>Free JowkariTech preview links stay live for 30 minutes. A new free preview can be started after the 3-hour cooldown.</p><a class="btn orange" href="./">Create another design</a></div></div>';return}$('setup').classList.add('hide');$('app').classList.add('hide');$('publicPreview').classList.remove('hide');var th=themes[state.style]||themes.bold;document.documentElement.style.setProperty('--siteAccent',th.a);document.documentElement.style.setProperty('--siteDark',th.d);renderSite($('previewSite'),false);var edit='./';$('editDesign').href=edit;function tick(){var left=Math.max(0,exp-Date.now());if(left<=0){location.reload();return}var m=Math.floor(left/60000),s=Math.floor((left%60000)/1000);$('countdown').textContent=m+':'+String(s).padStart(2,'0')}tick();setInterval(tick,1000);$('copyPreview').onclick=async function(){try{await navigator.clipboard.writeText(location.href);this.textContent='Copied ✓'}catch(e){}}}
 var qs=new URLSearchParams(location.search),review=qs.get('review'),previewId=qs.get('preview_id'),pv=qs.get('preview'),exp=Number(qs.get('exp'));
 async function loadServerPreview(id){
   try{
@@ -516,7 +516,7 @@ async function loadServerPreview(id){
     if(r.status===410){document.body.innerHTML='<div class="expired"><div><h1>This free preview expired.</h1><p>The 30-minute JowkariTech preview is no longer available.</p><a class="btn orange" href="./">Design a website</a></div></div>';return}
     if(!r.ok||!j.ok)throw new Error();
     previewMode(j.design,Number(j.expires_at));
-  }catch(e){document.body.innerHTML='<div class="expired"><div><h1>Preview unavailable.</h1><p>This preview could not be loaded right now.</p><a class="btn orange" href="./">Back to Jowkari Sites</a></div></div>'}
+  }catch(e){document.body.innerHTML='<div class="expired"><div><h2>Preview unavailable.</h2><p>This preview could not be loaded right now.</p><a class="btn orange" href="./">Back to Jowkari Sites</a></div></div>'}
 }
 if(review){try{previewMode(decode(review),Date.now()+3650*24*60*60*1000);$('previewBar').querySelector('b').textContent='JowkariTech Submitted Design';$('previewBar').querySelector('.meta').textContent='Permanent customer design review';$('editDesign').style.display='none'}catch(e){location.href='./'}}
 else if(previewId){loadServerPreview(previewId)}
