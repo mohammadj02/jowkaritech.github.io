@@ -8,7 +8,8 @@
       data.access_key='67b05f47-421b-41f8-837e-c8a12741dc9c';
       data.from_name='JowkariTech Website';
       data.subject=(data.subject||'New JowkariTech website lead')+' — '+(data.business||data.name||'New lead');
-      data.botcheck='';
+      data.source_page=location.pathname;
+      if(data.botcheck){btn.disabled=false;btn.textContent=old;return;}
       try{
         var r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
         var j=await r.json().catch(function(){return{}});
