@@ -17,7 +17,8 @@ export const clone = x => JSON.parse(JSON.stringify(x));
 export const uid = () => 's' + crypto.randomUUID().replaceAll('-', '').slice(0, 15);
 export const slug = x => clean(x).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'page';
 export function safeImage(x) {
-  if (typeof x !== 'string' || x.length > 900000) return '';
+  if (typeof x !== 'string') return '';
+  if (x.length > MAX_BYTES) throw new Error('An image exceeds the 4 MB project limit. Your original draft is unchanged; resize it before importing.');
   if (/^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(x)) return x;
   try { const u = new URL(x); return u.protocol === 'https:' && !u.username && !u.password ? u.href : ''; } catch { return ''; }
 }
@@ -41,7 +42,7 @@ export function normalize(input) {
       let id = /^[a-z0-9_-]{1,60}$/i.test(s.id || '') ? s.id : uid(); if (ids.has(id)) id = uid(); ids.add(id);
       const image = safeImage(s.image);
       return { id, type: s.type, title: clean(s.title, 240), body: clean(s.body, 6000), kicker: clean(s.kicker, 100),
-        image, alt: clean(s.alt, 200), images: Array.isArray(s.images) ? s.images.slice(0, 9).map(safeImage) : [],
+        image, alt: clean(s.alt, 200), images: Array.isArray(s.images) ? s.images.slice(0, 12).map(safeImage) : [],
         items: Array.isArray(s.items) ? s.items.slice(0, 12).map(t => clean(t, 300)) : [],
         itemDescriptions: Array.isArray(s.itemDescriptions) ? s.itemDescriptions.slice(0, 12).map(t => clean(t, 1000)) : [],
         link: safeLink(s.link), button: clean(s.button, 100), background: safeColor(s.background, ''),
@@ -103,7 +104,7 @@ export function siteHTML(project, options = {}) {
   const accent = safeColor(p.accent, theme.accent), pages = Object.keys(p.pages), font = p.font === 'Georgia' ? 'Georgia,serif' : 'system-ui,-apple-system,Segoe UI,sans-serif';
   const buttonLink = /^call/i.test(p.cta) && safeLink('tel:' + p.phone) ? safeLink('tel:' + p.phone) : '#contact';
   function text(tag, val, field, s) { return `<${tag}${editable ? ` contenteditable="true" spellcheck="true" data-field="${field}" data-id="${e(s.id)}"` : ''}>${e(val)}</${tag}>`; }
-  function image(src, alt, s, slot = 'image') { const u = safeImage(src); return u ? `<img data-image-slot="${e(slot)}" src="${e(u)}" alt="${e(alt || s.title)}" loading="lazy" style="object-fit:${s.fit};object-position:50% ${s.position}%;border-radius:${s.radius}px">` : (editable ? `<div class="photoEmpty" data-image-slot="${e(slot)}">＋ Add a photo</div>` : ''); }
+  function image(src, alt, s, slot = 'image') { const u = safeImage(src); return u ? `<img data-image-slot="${e(slot)}" src="${e(u)}" alt="${e(alt || s.title)}" loading="${s.type==='hero'?'eager':'lazy'}" style="object-fit:${s.fit};object-position:50% ${s.position}%;border-radius:${s.radius}px">` : (editable ? `<div class="photoEmpty" data-image-slot="${e(slot)}">＋ Add a photo</div>` : ''); }
   function button(s) { const link = safeLink(s.link) || buttonLink; return `<a class="siteButton" href="${e(link)}"${/^https?:/.test(link) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${e(s.button || p.cta)} <span aria-hidden="true">↗</span></a>`; }
   function section(s) {
     if (s.hidden && !editable) return '';
