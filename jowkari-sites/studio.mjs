@@ -1,0 +1,177 @@
+import { VERSION, MAX_BYTES, INDUSTRIES, THEMES, BLOCKS, normalize, starter, makeBlock, siteHTML, reorder, safeImage, safeLink, safeColor, escapeHTML as e, clone, uid, slug, makeZip } from './core.mjs';
+const $ = id => document.getElementById(id);
+const API = 'https://jowkari-preview.jowkari-1mh.workers.dev';
+const AI = 'https://jowkari-ai.jowkari-1mh.workers.dev/generate-site';
+let project, tab = 'pages', selected = '', editing = true, history = [], future = [], db, saveTimer, toastTimer, imageTarget, viewOnly = false, currentScroll = 0, revision = 0;
+let shareRecord;
+try { shareRecord = JSON.parse(localStorage.getItem('jowkariStudioShare') || 'null'); } catch {}
+function toast(message) { $('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5500); }
+function errorText(error) {return error instanceof Error ? error.message : 'Something went wrong. Your design is still in the editor.';}
+function openDB() {return new Promise((resolve,reject)=>{const q=indexedDB.open('jowkari-studio',1);q.onupgradeneeded=()=>q.result.createObjectStore('drafts');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});}
+function storage(mode,work) {return new Promise((resolve,reject)=>{if(!db){reject(new Error('Browser storage is unavailable. Use Files → Download project backup.'));return;}const tx=db.transaction('drafts',mode),s=tx.objectStore('drafts');let value;work(s,v=>value=v);tx.oncomplete=()=>resolve(value);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error('Save interrupted.'));});}
+async function save() {const own=++revision;try {const p=normalize(project);await storage('readwrite',s=>s.put(p,'active'));if(own===revision)$('saveStatus').textContent='Saved on this browser · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}catch(err){$('saveStatus').textContent='Not saved — download a backup';toast(errorText(err));}}
+function queueSave() {if(viewOnly)return;$('saveStatus').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(save,350);}
+function current() {return project.pages[project.page];}
+function find(id=selected) {return Object.values(project.pages).flat().find(s=>s.id===id);}
+function commit(change,{frame=true,panels=true}={}) {const before=clone(project);try {change();project=normalize(project);history.push(before);if(history.length>30)history.shift();future=[];queueSave();draw({frame,panels});return true;}catch(err){project=before;toast(errorText(err));return false;}}
+function restore(which) {const src=which==='undo'?history:future,dst=which==='undo'?future:history;if(!src.length)return;dst.push(clone(project));project=src.pop();queueSave();draw();}
+function draw({frame=true,panels=true}={}) {if(!project)return;$('projectName').textContent=project.name;$('undo').disabled=!history.length;$('redo').disabled=!future.length;if(frame)$('siteFrame').srcdoc=siteHTML(project,{editable:editing&&!viewOnly,noindex:true});if(panels){renderPanel();renderInspector();}}
+function button(label,action,cls='button') {return `<button class="${cls}" data-action="${action}">${label}</button>`;}
+function select(id,slot) {selected=id;renderInspector(slot);renderOutlineSelection();$('inspector').classList.add('open');$('siteFrame').contentWindow.postMessage({type:'jowkari-parent',action:'select',id,scroll:false},'*');}
+function renderOutlineSelection(){document.querySelectorAll('.sectionRow').forEach(n=>n.classList.toggle('selected',n.dataset.id===selected));}
+function sectionAction(action,id) {
+  const s=find(id);if(!s)return;
+  if(action==='remove'&&!confirm('Delete this section? You can undo this change.'))return;
+  commit(()=>{const list=current(),i=list.findIndex(x=>x.id===id);if(i<0)return;
+    if(action==='up'&&i>0)[list[i-1],list[i]]=[list[i],list[i-1]];
+    if(action==='down'&&i<list.length-1)[list[i+1],list[i]]=[list[i],list[i+1]];
+    if(action==='duplicate'){const c=clone(s);c.id=uid();list.splice(i+1,0,c);selected=c.id;}
+    if(action==='remove'){list.splice(i,1);selected='';}
+  });
+}
+function addBlock(type,target) {if(!Object.hasOwn(BLOCKS,type))return;commit(()=>{const block=makeBlock(type,project),list=current(),at=target?list.findIndex(s=>s.id===target):list.length;list.splice(at<0?list.length:at,0,block);selected=block.id;});$('inspector').classList.add('open');}
+function drop(data,target) {if(data.block)addBlock(data.block,target);else if(data.id)commit(()=>{project.pages[project.page]=reorder(current(),data.id,target);selected=data.id;});}
+function setTab(next) {tab=next;$('leftPanel').classList.remove('closed');document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));renderPanel();}
+function field(label,key,value,type='text',attrs='') {return `<label>${label}<input data-setting="${key}" type="${type}" value="${e(value)}" ${attrs}></label>`;}
+function renderPanel() {
+  const box=$('leftPanel'); let html=`<div class="panelTop"><h2>${({pages:'Your pages',add:'Add a section',design:'Look & feel',media:'Your photos',settings:'Business details',files:'Project files'})[tab]}</h2><button class="iconButton" data-action="close-panel" aria-label="Close panel">×</button></div>`;
+  if(tab==='pages'){
+    html+=`<p>Switch pages. Drag the sections below to change their order.</p>`+Object.keys(project.pages).map(name=>`<div class="pageRow${name===project.page?' active':''}"><button data-page="${e(name)}">${e(name)}</button><button class="iconButton" data-rename="${e(name)}" aria-label="Rename ${e(name)}">✎</button>${Object.keys(project.pages).length>1?`<button class="iconButton" data-delete-page="${e(name)}" aria-label="Delete ${e(name)}">×</button>`:''}</div>`).join('');
+    html+=button('＋ Add page','add-page','button small fullWidth')+`<hr class="sep"><span class="eyebrow">SECTIONS ON ${e(project.page)}</span><div class="sectionList">`+current().map(s=>`<div class="sectionRow${s.id===selected?' selected':''}" draggable="true" data-id="${s.id}"><span aria-hidden="true">⠿</span><div class="rowText" data-select="${s.id}"><strong>${e(BLOCKS[s.type])}${s.hidden?' (hidden)':''}</strong><small>${e(s.title)}</small></div><button class="iconButton" data-move="up" data-id="${s.id}" aria-label="Move ${e(BLOCKS[s.type])} up">↑</button><button class="iconButton" data-move="down" data-id="${s.id}" aria-label="Move ${e(BLOCKS[s.type])} down">↓</button></div>`).join('')+`</div><p class="fine">Keyboard-friendly: use ↑ and ↓ to reorder without dragging.</p>`;
+  }
+  if(tab==='add')html+=`<p>Click to add, or drag a block onto the website. Every section stays responsive.</p><div class="blockList">`+Object.entries(BLOCKS).map(([key,label])=>`<button draggable="true" data-block="${key}"><span>＋</span>${label}</button>`).join('')+`</div>`;
+  if(tab==='design')html+=`<p>Change your style without losing the work you have already done.</p><div class="themeList">`+Object.entries(THEMES).map(([key,t])=>`<button class="theme${project.style===key?' active':''}" data-theme="${key}"><i style="background:${t.accent}"></i><span>${t.label}</span></button>`).join('')+`</div>`+field('Button & accent colour','accent',project.accent||THEMES[project.style].accent,'color')+`<label>Heading style<select data-setting="font"><option value="Inter" ${project.font!=='Georgia'?'selected':''}>Clean sans serif</option><option value="Georgia" ${project.font==='Georgia'?'selected':''}>Editorial serif</option></select></label><hr class="sep"><p class="fine">Images, content and section order remain unchanged when you switch themes.</p>`;
+  if(tab==='media')html+=`<p>Upload once. Select a section or image slot, then choose a photo to use there.</p>`+button('Upload photo ↓','upload-library','button primary fullWidth')+`<p class="fine">PNG, JPG, WebP or GIF, up to 12 MB. Images are resized for fast loading; animated GIFs become still images. HEIC: export as JPG first.</p><div class="mediaGrid">`+project.media.map((u,i)=>`<div><button class="mediaTile" data-media="${i}"><img src="${e(u)}" alt="Uploaded photo ${i+1}"><span>Use photo ${i+1}</span></button><button class="textButton" data-remove-media="${i}">Remove from library</button></div>`).join('')+`</div>`;
+  if(tab==='settings')html+=field('Business name','name',project.name,'text','maxlength="120"')+field('Business type','industry',project.industry)+field('City / service area','city',project.city)+field('Phone','phone',project.phone,'tel')+field('Email for enquiries','email',project.email,'email')+field('Main button wording','cta',project.cta)+`<hr class="sep"><h3>Business logo</h3>${project.logo?`<img class="imageThumb" src="${e(project.logo)}" alt="Your logo">`:''}`+button('Upload / replace logo','upload-logo','button fullWidth')+button('Remove logo','remove-logo','textButton')+`<hr class="sep"><h3>Refine the writing</h3><p>AI can draft headings and descriptions for your current page. Review every business claim before publishing. This uses the connected AI service.</p>`+button('Refine this page with AI','ai','button fullWidth');
+  if(tab==='files')html+=`<p>Your draft saves on this browser. A backup lets you move to a different computer.</p>`+button('Download project backup','backup','button fullWidth')+`<p></p>`+button('Import project JSON','import','button fullWidth')+`<hr class="sep">`+button('Download website ZIP','zip','button primary fullWidth')+`<p class="fine">Includes index.html, your project JSON and deployment instructions. Uploaded photos are embedded; external photos remain URL references.</p><hr class="sep">`+button('Start a new website','new','button fullWidth')+`<p class="fine">Studio ${VERSION}. The previous editor draft is not deleted when migrated.</p>`;
+  box.innerHTML=html;
+}
+function renderInspector(slot) {
+  const box=$('inspector'),s=find();
+  if(!s){box.innerHTML=`<div class="panelTop"><span class="eyebrow">SECTION SETTINGS</span><button class="iconButton" data-action="close-inspector">×</button></div><h2>Make it yours.</h2><p>Click a section or image on the canvas to edit it. Use the Photos panel for your own images.</p>`;return;}
+  if(slot)box.dataset.slot=slot;else if(!box.dataset.slot)box.dataset.slot='image';
+  let html=`<div class="panelTop"><h2>${e(BLOCKS[s.type])}</h2><button class="iconButton" data-action="close-inspector" aria-label="Close settings">×</button></div><p>Edits apply when you leave a field. You can also type directly on the website.</p>`;
+  html+=`<label>Headline<input data-field="title" value="${e(s.title)}" maxlength="240"></label><label>Text<textarea data-field="body" rows="4">${e(s.body)}</textarea></label>`;
+  if(['hero','about','image'].includes(s.type))html+=`<label>Layout<select data-field="layout">${['split','reverse','wide','center'].map(x=>`<option ${s.layout===x?'selected':''}>${x}</option>`).join('')}</select></label>`;
+  if(['hero','about','image','gallery','services'].includes(s.type)){
+    const slots=['services','gallery'].includes(s.type)?Array.from({length:s.type==='services'?Math.max(1,s.items.length):Math.max(3,s.images.length)},(_,i)=>'images:'+i):['image'];
+    if(!slots.includes(box.dataset.slot))box.dataset.slot=slots[0];
+    const target=box.dataset.slot,value=target==='image'?s.image:s.images[Number(target.split(':')[1])];
+    html+=`<div class="imageSettings"><label>Image to edit<select id="imageSlot">${slots.map((x,i)=>`<option value="${x}" ${x===target?'selected':''}>${x==='image'?'Main photo':'Photo '+(i+1)}</option>`).join('')}</select></label>${value?`<img class="imageThumb" src="${e(value)}" alt="Selected section photo">`:''}<button class="button fullWidth" data-action="upload-section">Upload / replace photo</button><label>Or use a secure image URL<input id="imageURL" type="url" value="${value?.startsWith('https:')?e(value):''}" placeholder="https://…/photo.jpg"></label><button class="textButton" data-action="apply-image-url">Apply URL</button> · <button class="textButton" data-action="remove-image">Remove image</button><label>Image description / alt text<input data-field="alt" value="${e(s.alt)}" maxlength="200"></label><label>Image fit<select data-field="fit"><option ${s.fit==='cover'?'selected':''}>cover</option><option ${s.fit==='contain'?'selected':''}>contain</option></select></label><label>Vertical focus<input data-field="position" type="range" min="0" max="100" value="${s.position}"></label></div>`;
+  }
+  if(['services','faq','reviews'].includes(s.type))html+=`<label>${s.type==='reviews'?'Genuine review quotes':'Items / questions'} (one per line)<textarea data-field="items" rows="4">${e(s.items.join('\n'))}</textarea></label><label>${s.type==='reviews'?'Attribution (with permission)':'Descriptions / answers'} (matching lines)<textarea data-field="itemDescriptions" rows="4">${e(s.itemDescriptions.join('\n'))}</textarea></label>`;
+  if(['hero','cta'].includes(s.type))html+=`<label>Button wording<input data-field="button" value="${e(s.button)}" placeholder="${e(project.cta)}"></label><label>Button link<input data-field="link" value="${e(s.link)}" placeholder="#contact, https://…, tel:…, mailto:…"></label><p class="fine">Leave blank to use the default quote/contact action. Test links in Preview mode.</p>`;
+  html+=`<label>Section background<input type="color" data-field="background" value="${safeColor(s.background,THEMES[project.style].paper)}"></label><label>Section spacing<input data-field="padding" type="range" min="24" max="130" value="${s.padding}"></label><label>Image corner radius<input data-field="radius" type="range" min="0" max="40" value="${s.radius}"></label><label><span><input type="checkbox" data-field="hidden" ${s.hidden?'checked':''} style="width:auto"> Hide on published site</span></label><div class="inline">${button('Duplicate','duplicate','button small')}${button('Delete','remove','button small')}</div>`;
+  box.innerHTML=html;
+}
+function upload(target) {imageTarget=target;$('imageUpload').value='';$('imageUpload').click();}
+async function optimizedImage(file) {
+  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type))throw new Error('Use a JPG, PNG, WebP or GIF. Convert HEIC images to JPG first.');
+  if(file.size>12*1024*1024)throw new Error('Choose an image under 12 MB.');
+  const objectURL=URL.createObjectURL(file),img=new Image();
+  try {await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('This image could not be decoded. Export it as JPG or PNG and try again.'));img.src=objectURL;});
+    if(!img.naturalWidth||!img.naturalHeight||img.naturalWidth*img.naturalHeight>80e6)throw new Error('Image dimensions are too large. Resize the photo before uploading.');
+    const ratio=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+    let result=canvas.toDataURL('image/webp',.82);if(result.length>650000)result=canvas.toDataURL('image/webp',.6);if(result.length>850000)throw new Error('The resized photo is still large. Use a smaller image.');return result;
+  } finally {URL.revokeObjectURL(objectURL);}
+}
+function applyImage(value,target={id:selected,slot:$('inspector').dataset.slot||'image'}) {
+  return commit(()=>{if(!project.media.includes(value)&&value)project.media.push(value);if(target.logo)project.logo=value;else if(target.id){const s=find(target.id);if(!s)throw new Error('Select the destination section again.');if(target.slot.startsWith('images:'))s.images[Number(target.slot.split(':')[1])]=value;else s.image=value;}});
+}
+$('imageUpload').addEventListener('change',async ev=>{const f=ev.target.files[0],target={...imageTarget};if(!f)return;toast('Preparing your photo…');try{const value=await optimizedImage(f);if(applyImage(value,target))toast('Photo added. Saving it with your project…');}catch(err){toast(errorText(err));}});
+function download(blob,name) {const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+function backup() {download(new Blob([JSON.stringify(project,null,2)],{type:'application/json'}),slug(project.name)+'.jowkari.json');}
+function exportSite(){try{const p=normalize(project);const readme=`JOWKARI SITES — DEPLOY YOUR WEBSITE\n\n1. Unzip this package.\n2. Open index.html to review the website.\n3. Upload index.html to the public root of any static website host.\n   GitHub Pages: add index.html to your own repository, then configure Pages.\n   Cloudflare Pages: use Direct Upload and upload the folder containing index.html.\n4. Connect your domain through the host/registrar and enable HTTPS.\n\nThe site is one HTML file with client-side navigation between its pages.\nUploaded photos are embedded. External image URLs require network access.\nForms prepare an email in the visitor's email app; they DO NOT send automatically.\nFor a hosted lead inbox, connect a form service before promoting the site.\nNo payment checkout, backend booking system, or AI chatbot is included in this static export.\nCheck all business claims, image rights, contact details and privacy notices before publishing.\nYour project.json can be imported back into Jowkari Sites Studio.\n\nGenerated by JowkariTech — ${VERSION}\n`;download(makeZip({'index.html':siteHTML(p),'project.json':JSON.stringify(p,null,2),'READ-ME.txt':readme}),slug(p.name)+'-website.zip');toast('Website ZIP exported. It includes your photos and editable project backup.');}catch(err){toast(errorText(err));}}
+$('projectImport').addEventListener('change',async ev=>{const f=ev.target.files[0];if(!f)return;try{if(f.size>MAX_BYTES)throw new Error('Project file is over 4 MB.');const incoming=normalize(JSON.parse(await f.text()));if(project&&!confirm('Replace the current draft with this project? Your current draft will be kept as a browser backup.'))return;if(project&&db)await storage('readwrite',s=>s.put(project,'backup-'+Date.now()));project=incoming;selected='';history=[];future=[];queueSave();draw();$('startDialog').close();toast('Project imported with its uploaded images.');}catch(err){toast(errorText(err));}});
+async function api(path,body,method='POST',timeout=20000){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Accept':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal});const result=await r.json().catch(()=>({}));if(!r.ok||!result.ok){const err=new Error(result.message||({'cooldown':'A new free preview is available after the 3-hour cooldown. You can still preview locally or export your website.','expired_or_missing':'This preview has expired or was removed. Ask the owner for a new link.','design_too_large':'This design exceeds the 4 MB preview limit. Remove unused photos or export a ZIP.','storage_unavailable':'Preview storage is temporarily unavailable. Your draft is safe; download a website ZIP instead.'})[result.error]||`Preview service returned ${r.status}. Your draft is safe; try again or export a ZIP.`);err.status=r.status;throw err;}return result;}catch(err){if(err.name==='AbortError')throw new Error('The preview server did not respond in time. No design was lost. Try again or download a ZIP.');if(err instanceof TypeError)throw new Error('Cannot connect to the preview server. Check your connection or download the website ZIP.');throw err;}finally{clearTimeout(timer);}}
+function rememberShare(record){shareRecord=record;try{localStorage.setItem('jowkariStudioShare',JSON.stringify(record));}catch{toast('Preview created, but this browser could not save its edit key. Copy the link now.');}}
+function showShare(record){$('shareResult').hidden=false;$('shareURL').value=record.preview_url;$('openShare').href=record.preview_url;$('shareExpiry').textContent='Expires '+new Date(record.expires_at).toLocaleString()+'. Anyone with the link can view the included business details and photos.';}
+$('share').onclick=async()=>{const btn=$('share');btn.disabled=true;$('shareError').textContent='';try{const body={design:normalize(project)};if(shareRecord?.expires_at>Date.now()){body.id=shareRecord.id;body.manage_token=shareRecord.manage_token;}const r=await api('/v2/previews',body);rememberShare(r);showShare(r);}catch(err){$('shareError').textContent=errorText(err);}finally{btn.disabled=false;}};
+$('copyShare').onclick=async()=>{try{await navigator.clipboard.writeText($('shareURL').value);toast('Preview link copied.');}catch{$('shareURL').focus();$('shareURL').select();toast('Press Ctrl+C or use Copy to copy the selected link.');}};
+$('deleteShare').onclick=async()=>{if(!shareRecord||!confirm('Remove this public preview? Your draft will not be deleted.'))return;try{await api('/v2/previews/'+shareRecord.id,{manage_token:shareRecord.manage_token},'DELETE');rememberShare(null);$('shareResult').hidden=true;toast('Public preview removed.');}catch(err){$('shareError').textContent=errorText(err);}};
+$('showLaunch').onclick=()=>{$('launchForm').hidden=false;$('launchForm').scrollIntoView({behavior:'smooth'});};
+$('launchForm').onsubmit=async ev=>{ev.preventDefault();const form=ev.target,d=Object.fromEntries(new FormData(form)),btn=form.querySelector('[type=submit]'),out=$('launchResult');if(d.website_check)return;btn.disabled=true;out.textContent='Saving your design for review…';out.className='';try{
+  const review=await api('/v2/handoffs',{design:normalize(project)});
+  const payload={access_key:'67b05f47-421b-41f8-837e-c8a12741dc9c',from_name:'Jowkari Sites Studio',subject:'Website launch request — '+project.name,name:d.name,email:d.email,plan:d.plan,domain:d.domain,notes:d.notes,business:project.name,phone:project.phone,design_review:review.preview_url,review_expires:new Date(review.expires_at).toISOString(),source_page:'/jowkari-sites/',project_id:review.id};
+  const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(20000)}),j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error('The form provider did not accept the request. Download your project backup and email it to jowkaritech@gmail.com.');
+  out.className='success';out.textContent='Request accepted by the form provider. No payment was taken. Keep project ID '+review.id+'. Review link expires in 30 days.';
+} catch(err){out.className='error';out.textContent=errorText(err);}finally{btn.disabled=false;}};
+async function refine(btn){if(!confirm('Replace the current page headings and descriptions with an AI draft? Existing photos stay unchanged, and Undo is available.'))return;btn.disabled=true;btn.textContent='Writing…';try{const page=project.page;const r=await fetch(AI,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:project.name,industry:project.industry,city:project.city,services:current().find(x=>x.type==='services')?.items||[]}),signal:AbortSignal.timeout(25000)}),j=await r.json().catch(()=>({}));if(!r.ok||!j.ok||!j.content)throw new Error('AI writing is unavailable right now. Your current content is unchanged.');const x=j.content;commit(()=>{for(const s of project.pages[page]){const pairs=({hero:['headline','subheadline'],about:['aboutTitle','aboutBody'],services:['serviceSectionTitle','serviceSectionBody'],cta:['ctaHeadline','ctaBody']})[s.type];if(pairs){if(typeof x[pairs[0]]==='string')s.title=x[pairs[0]];if(typeof x[pairs[1]]==='string')s.body=x[pairs[1]];}}});toast('AI draft applied. Please verify all claims before publishing.');}catch(err){toast(err.name==='TimeoutError'?'AI request timed out. Your existing text is safe.':errorText(err));}finally{btn.disabled=false;btn.textContent='Refine this page with AI';}}
+async function actions(action,buttonEl) {
+  if(action==='close-panel'){$('leftPanel').classList.add('closed');return;}
+  if(action==='close-inspector'){$('inspector').classList.remove('open');return;}
+  if(action==='add-page'){const value=prompt('New page name:','About');if(!value)return;const name=value.trim();if(!name||['__proto__','constructor','prototype'].includes(name)||Object.hasOwn(project.pages,name)){toast('Choose a unique page name.');return;}commit(()=>{project.pages[name]=[makeBlock('text',project)];project.page=name;selected='';currentScroll=0;});}
+  if(action==='upload-logo')upload({logo:true});
+  if(action==='remove-logo')commit(()=>project.logo='');
+  if(action==='upload-library')upload({});
+  if(action==='upload-section')upload({id:selected,slot:$('inspector').dataset.slot||'image'});
+  if(action==='apply-image-url'){const url=safeImage($('imageURL').value);if(!url){toast('Enter a valid HTTPS image URL.');return;}applyImage(url);}
+  if(action==='remove-image')applyImage('');
+  if(['duplicate','remove'].includes(action))sectionAction(action,selected);
+  if(action==='backup')backup();
+  if(action==='import'){$('projectImport').value='';$('projectImport').click();}
+  if(action==='zip')exportSite();
+  if(action==='new'){if(db)await storage('readwrite',s=>s.put(project,'backup-'+Date.now())).catch(()=>{});$('resumeDraft').hidden=false;$('startDialog').showModal();}
+  if(action==='ai')refine(buttonEl);
+}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('button');if(b?.dataset.tab){setTab(b.dataset.tab);return;}
+  if(b?.dataset.close){$(b.dataset.close).close();return;}
+  if(b?.dataset.action){actions(b.dataset.action,b).catch(err=>toast(errorText(err)));return;}
+  const selectRow=ev.target.closest('[data-select]');if(selectRow){select(selectRow.dataset.select);$('siteFrame').contentWindow.postMessage({type:'jowkari-parent',action:'select',id:selected,scroll:true},'*');return;}
+  if(b?.dataset.move){sectionAction(b.dataset.move,b.dataset.id);return;}
+  if(b?.dataset.page){project.page=b.dataset.page;selected='';currentScroll=0;draw();queueSave();return;}
+  if(b?.dataset.rename){const old=b.dataset.rename,name=prompt('New name for '+old,old)?.trim();if(!name||name===old)return;if(Object.hasOwn(project.pages,name)||['__proto__','constructor','prototype'].includes(name)){toast('Choose a unique page name.');return;}commit(()=>{project.pages=Object.fromEntries(Object.entries(project.pages).map(([k,v])=>[k===old?name:k,v]));if(project.page===old)project.page=name;});return;}
+  if(b?.dataset.deletePage){const name=b.dataset.deletePage;if(!confirm('Delete '+name+' and its sections?'))return;commit(()=>{delete project.pages[name];project.page=Object.keys(project.pages)[0];selected='';});return;}
+  if(b?.dataset.block){addBlock(b.dataset.block);return;}
+  if(b?.dataset.theme){commit(()=>{project.style=b.dataset.theme;project.accent='';});return;}
+  if(b?.dataset.removeMedia!==undefined){commit(()=>project.media.splice(Number(b.dataset.removeMedia),1));return;}
+  if(b?.dataset.media!==undefined){if(!find()){toast('Select a photo section first, then choose a photo.');return;}applyImage(project.media[Number(b.dataset.media)]);toast('Photo applied to the selected slot.');}
+});
+document.addEventListener('change',ev=>{
+  const el=ev.target;if(el.id==='imageSlot'){renderInspector(el.value);return;}
+  if(el.dataset.setting){const key=el.dataset.setting,value=el.value;commit(()=>project[key]=value);return;}
+  if(el.dataset.field){const key=el.dataset.field,s=find();if(!s)return;let value=el.type==='checkbox'?el.checked:el.value;
+    if(['items','itemDescriptions'].includes(key))value=value.split('\n');
+    if(['padding','radius','position'].includes(key))value=Number(value);
+    if(key==='link'&&value&&!safeLink(value)){toast('Use https://, tel:, mailto:, #contact or a #page-0 style internal link.');return;}
+    commit(()=>s[key]=value);
+  }
+});
+$('leftPanel').addEventListener('dragstart',ev=>{const row=ev.target.closest('[draggable=true]');if(!row)return;ev.dataTransfer.setData('application/x-jowkari',JSON.stringify(row.dataset.block?{block:row.dataset.block}:{id:row.dataset.id}));ev.dataTransfer.effectAllowed='copyMove';});
+$('leftPanel').addEventListener('dragover',ev=>{const row=ev.target.closest('.sectionRow');if(row){ev.preventDefault();row.classList.add('dropTarget');}});
+$('leftPanel').addEventListener('dragleave',ev=>ev.target.closest('.sectionRow')?.classList.remove('dropTarget'));
+$('leftPanel').addEventListener('drop',ev=>{ev.preventDefault();document.querySelectorAll('.dropTarget').forEach(x=>x.classList.remove('dropTarget'));const row=ev.target.closest('.sectionRow');if(!row)return;try{drop(JSON.parse(ev.dataTransfer.getData('application/x-jowkari')),row.dataset.id);}catch{}});
+window.addEventListener('message',ev=>{if(ev.source!==$('siteFrame').contentWindow||ev.data?.type!=='jowkari-studio'||viewOnly)return;const d=ev.data;
+  if(d.action==='select'){select(d.id,d.slot);return;}
+  if(d.action==='edit'&&['title','body','kicker'].includes(d.field)&&typeof d.value==='string'){const s=find(d.id);if(s&&s[d.field]!==d.value)commit(()=>s[d.field]=d.value,{frame:false});return;}
+  if(d.action==='page'&&Object.hasOwn(project.pages,d.page)){project.page=d.page;selected='';currentScroll=0;renderPanel();renderInspector();queueSave();return;}
+  if(d.action==='drop'){drop(d,d.target);return;}
+  if(['up','down','duplicate','remove'].includes(d.action)){sectionAction(d.action,d.id);return;}
+  if(d.action==='link-hint'){toast('Turn on Preview to test phone, email and external links.');return;}
+  if(d.action==='scroll'){currentScroll=Number(d.y)||0;return;}
+  if(d.action==='ready')$('siteFrame').contentWindow.postMessage({type:'jowkari-parent',action:'restore',y:currentScroll,id:selected},'*');
+});
+$('undo').onclick=()=>restore('undo');$('redo').onclick=()=>restore('redo');
+document.addEventListener('keydown',ev=>{if(viewOnly||ev.target.closest('input,textarea,[contenteditable]'))return;if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'){ev.preventDefault();restore(ev.shiftKey?'redo':'undo');}});
+document.querySelectorAll('[data-device]').forEach(b=>b.onclick=()=>{$('frameWrap').className='frameWrap '+(b.dataset.device==='desktop'?'':b.dataset.device);document.querySelectorAll('[data-device]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+function togglePreview(){editing=!editing;document.body.classList.toggle('previewOnly',!editing);$('preview').textContent=editing?'Preview':'Back to editor';$('editToggle').textContent=editing?'Editing on':'Preview mode';$('canvasHint').textContent=editing?'Click text to edit. Drag a section by its handle to reorder.':'Live preview — test navigation, calls, email and links.';draw({panels:editing});}
+$('preview').onclick=togglePreview;$('editToggle').onclick=togglePreview;$('projectName').onclick=()=>setTab('settings');
+$('publish').onclick=()=>{if(shareRecord?.expires_at>Date.now())showShare(shareRecord);$('publishDialog').showModal();};$('exportZIP').onclick=exportSite;
+$('startForm').onsubmit=async ev=>{ev.preventDefault();const d=Object.fromEntries(new FormData(ev.target));try{if(project&&db)await storage('readwrite',s=>s.put(project,'backup-'+Date.now()));project=starter({...d,services:d.services.split(/[,\n]/).map(x=>x.trim()).filter(Boolean).slice(0,12)});history=[];future=[];selected='';currentScroll=0;shareRecord=null;try{localStorage.removeItem('jowkariStudioShare');}catch{};$('startDialog').close();draw();queueSave();}catch(err){toast(errorText(err));}};
+$('resumeDraft').onclick=()=>{$('startDialog').close();draw();};
+function unavailable(message) {document.querySelectorAll('dialog').forEach(d=>d.close());document.body.innerHTML=`<main class="unavailable"><span class="eyebrow">JOWKARI SITES</span><h1>We couldn’t open this preview.</h1><p>${e(message)}</p><p>Your saved editor project has not been deleted.</p><a class="button primary" href="./">Open website builder</a> <a class="button" href="mailto:jowkaritech@gmail.com">Contact JowkariTech</a></main>`;}
+function showPublic(data,expires,kind='preview') {project=normalize(data);editing=false;viewOnly=true;document.body.classList.add('previewOnly','viewer');$('canvasHint').textContent=(kind==='handoff'?'Design review · private by link':'Shared preview · not a live business website')+' · expires '+new Date(expires).toLocaleString();$('editToggle').hidden=true;$('saveStatus').textContent='Read-only · '+new Date(expires).toLocaleString();$('projectName').disabled=true;document.querySelector('meta[name=description]').content='Temporary JowkariTech website preview.';const m=document.createElement('meta');m.name='robots';m.content='noindex,nofollow';document.head.append(m);draw();setTimeout(()=>unavailable('This temporary preview has expired. Ask its owner for a new link.'),Math.min(2147483647,Math.max(1,expires-Date.now())));}
+async function init(){
+  $('industries').innerHTML=INDUSTRIES.map(x=>`<option value="${e(x)}">`).join('');
+  const q=new URLSearchParams(location.search),previewID=q.get('preview_id'),legacy=q.get('review')||q.get('preview');
+  if(previewID){try{const r=await api('/preview/'+encodeURIComponent(previewID),undefined,'GET');if(!r.expires_at||r.expires_at<Date.now())throw new Error('This preview has expired. Ask for a new preview link.');showPublic(r.design,r.expires_at,r.kind);}catch(err){unavailable(errorText(err));}return;}
+  if(legacy){try{const decoded=JSON.parse(decodeURIComponent(escape(atob(legacy.replaceAll('-','+').replaceAll('_','/')))));const expiry=q.has('review')?Date.now()+1800000:Number(q.get('exp'));if(!expiry||expiry<Date.now())throw new Error('This old preview link has expired.');showPublic(decoded,expiry);window.history.replaceState({},'',location.pathname);}catch(err){unavailable('This legacy link cannot be restored. Open the saved draft in the builder and create a new short link.');}return;}
+  try{db=await openDB();project=await storage('readonly',(s,set)=>{const r=s.get('active');r.onsuccess=()=>set(r.result);});if(project)project=normalize(project);}catch{toast('Browser storage is unavailable. You can still edit and download a backup.');}
+  if(!project){try{const old=localStorage.getItem('jowkariDesign');if(old){project=normalize(JSON.parse(old));if(db)await storage('readwrite',s=>s.put(project,'legacy-backup'));toast('Your previous editor draft was recovered.');}}catch{}}
+  if(q.get('quick')==='1'&&q.get('name')){if(project&&db)await storage('readwrite',s=>s.put(project,'backup-'+Date.now()));project=starter({name:q.get('name'),industry:q.get('industry')||'Local business',city:q.get('city')||'North Vancouver, BC',phone:q.get('phone')||'',email:q.get('email')||'',services:(q.get('services')||'').split(',').map(s=>s.trim()).filter(Boolean)});window.history.replaceState({},'',location.pathname);queueSave();}
+  if(project){draw();$('resumeDraft').hidden=false;queueSave();}else $('startDialog').showModal();
+  if(innerWidth<660)$('leftPanel').classList.add('closed');
+}
+window.addEventListener('beforeunload',()=>{if(project&&!viewOnly&&db){clearTimeout(saveTimer);save();}});
+init().catch(err=>unavailable(errorText(err)));
