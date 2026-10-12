@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { starter, normalize, siteHTML, safeImage, safeLink, reorder, makeBlock, makeZip, MAX_BYTES } from '../jowkari-sites/core.mjs';
+import worker from '../cloudflare/preview-worker.js';
+const make=()=>starter({name:'Test & Sons',industry:'Plumber',city:'North Vancouver',phone:'+16045550123',email:'owner@example.com',services:['Leaks','Drains','Fixtures']});
+class KV{data=new Map();async get(k){return this.data.get(k)??null;}async put(k,v){this.data.set(k,v);}async delete(k){this.data.delete(k);}}
+const env={PREVIEW_KV:new KV()};
+const call=async(path,data,method='POST',ip='203.0.113.2',origin='https://jowkaritech.com')=>worker.fetch(new Request('https://test.example'+path,{method,headers:{Origin:origin,'Content-Type':'application/json','CF-Connecting-IP':ip},body:data===undefined?undefined:JSON.stringify(data)}),env);
+test('legacy draft migration retains content and order',()=>{const p=normalize(make());assert.equal(p.name,'Test & Sons');assert.equal(p.pages.Home[1].items[0],'Leaks');assert.equal(Object.keys(p.pages).length,1);});
+test('unsafe image URLs and active links are not accepted',()=>{assert.equal(safeImage('javascript:alert(1)'), '');assert.equal(safeImage('data:image/svg+xml;base64,AAA'), '');assert.equal(safeLink('javascript:alert(1)'), '');assert.equal(safeLink('https://example.com'), 'https://example.com/');assert.equal(safeLink('tel:+16045550123'),'tel:+16045550123');});
+test('image markup cannot break an attribute or inject a script',()=>{const p=make();p.name='<script>alert(1)</script>';p.pages.Home[0].image='https://example.com/photo.jpg?a=1&b=2';p.pages.Home[0].title='" onclick="alert(1)';const html=siteHTML(p);assert(html.includes('src="https://example.com/photo.jpg?a=1&amp;b=2"'));assert(!html.includes('<script>alert(1)</script>'));assert(html.includes('&quot; onclick=&quot;alert(1)'));});
+test('reordering, new blocks, hidden blocks and editable export',()=>{const p=make(),ids=p.pages.Home.map(x=>x.id);p.pages.Home=reorder(p.pages.Home,ids[4],ids[0]);assert.equal(p.pages.Home[0].id,ids[4]);p.pages.Home.push({...makeBlock('image',p),hidden:true,title:'HIDDEN SECRET TITLE'});assert(!siteHTML(p).includes('HIDDEN SECRET TITLE'));assert(siteHTML(p,{editable:true}).includes('HIDDEN SECRET TITLE'));});
+test('ZIP has a correct local-header signature',async()=>{const bytes=new Uint8Array(await makeZip({'index.html':'hello','project.json':'{}'}).arrayBuffer());assert.deepEqual([...bytes.slice(0,4)],[0x50,0x4b,3,4]);});
+test('large photo design gets a short share link; images survive readback',async()=>{const p=make();p.pages.Home[0].image='data:image/png;base64,'+'A'.repeat(100000);const r=await call('/v2/previews',{design:p}),j=await r.json();assert.equal(r.status,200);assert(j.preview_url.length<120);assert(j.manage_token);const got=await (await call('/preview/'+j.id,undefined,'GET')).json();assert.equal(got.design.pages.Home[0].image,p.pages.Home[0].image);assert.equal(got.manage_token,undefined);assert.equal(got.manage_hash,undefined);
+ const bad=await call('/v2/previews',{design:p,id:j.id,manage_token:'0'.repeat(64)});assert.equal(bad.status,401);
+ p.name='Updated';const update=await (await call('/v2/previews',{design:p,id:j.id,manage_token:j.manage_token})).json();assert.equal(update.preview_url,j.preview_url);assert.equal(update.expires_at,j.expires_at);
+ const blocked=await call('/v2/previews',{design:p});assert.equal(blocked.status,429);
+ const del=await call('/v2/previews/'+j.id,{manage_token:j.manage_token},'DELETE');assert.equal(del.status,200);assert.equal((await call('/preview/'+j.id,undefined,'GET')).status,410);
+});
+test('handoff review is valid for 30 days',async()=>{const r=await call('/v2/handoffs',{design:make()}),j=await r.json();assert.equal(j.kind,'handoff');assert(j.expires_at>Date.now()+29*86400000);});
+test('reject cross-origin writes and oversized input',async()=>{assert.equal((await call('/v2/previews',{design:make()},'POST','1','https://evil.test')).status,403);const r=await call('/v2/previews',{junk:'x'.repeat(MAX_BYTES+10000)});assert.equal(r.status,413);});
+test('storage failures use useful JSON errors, never raw I/O output',async()=>{const r=await worker.fetch(new Request('https://a.example/v2/previews',{method:'POST',headers:{Origin:'https://jowkaritech.com'},body:'{}'}),{});assert.equal(r.status,503);assert.equal((await r.json()).error,'storage_unavailable');});
