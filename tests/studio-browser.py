@@ -11,6 +11,10 @@ BASE=f'http://127.0.0.1:{server.server_port}'
 im=Image.new('RGB',(1000,700),'#426954');d=ImageDraw.Draw(im);d.rectangle((60,60,940,640),fill='#d8bd8a');d.text((420,340),'UPLOAD TEST',fill='#18252d');im.save(OUT/'upload-test.png')
 report=[]
 def passed(name):report.append(name);print('PASS:',name,flush=True)
+def decoded(image):
+    expect(image).to_be_visible()
+    image.scroll_into_view_if_needed()
+    return image.evaluate('async el => { await el.decode(); return el.complete && el.naturalWidth > 0; }')
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True)
  context=browser.new_context(viewport={'width':1600,'height':1000},accept_downloads=True)
@@ -29,8 +33,7 @@ with sync_playwright() as p:
   frame.locator('[data-kind=hero] [data-image-slot]').click()
   page.locator('#inspector [data-action=upload-section]').click()
   page.locator('#imageUpload').set_input_files(str(OUT/'upload-test.png'))
-  image=frame.locator('[data-kind=hero] img');expect(image).to_be_visible()
-  assert image.evaluate('(el)=>el.complete && el.naturalWidth>0')
+  image=frame.locator('[data-kind=hero] img');assert decoded(image)
   assert image.get_attribute('src').startswith('data:image/webp;base64,');passed('uploaded image displays and decodes')
   page.screenshot(path=str(OUT/'desktop.png'),full_page=True)
   page.locator('#inspector [data-field=title]').fill('Local plumbing, without the runaround.')
@@ -53,8 +56,7 @@ with sync_playwright() as p:
   expect(frame.locator('[data-kind=gallery]')).to_have_count(2);passed('duplicate section')
   expect(page.locator('#saveStatus')).to_contain_text('Saved on this browser')
   page.reload();frame=page.frame_locator('#siteFrame');expect(frame.locator('h1')).to_have_text('Typed directly onto my website')
-  expect(frame.locator('[data-kind=hero] img')).to_be_visible()
-  assert frame.locator('[data-kind=hero] img').evaluate('(el)=>el.complete&&el.naturalWidth>0');passed('IndexedDB draft and image survive reload')
+  assert decoded(frame.locator('[data-kind=hero] img'));passed('IndexedDB draft and image survive reload')
   page.once('dialog',lambda dialog:dialog.accept('About Us'))
   page.locator('#leftPanel [data-action=add-page]').click()
   expect(page.locator('[data-page="About Us"]')).to_have_count(1);passed('add page')
@@ -74,7 +76,7 @@ with sync_playwright() as p:
    (OUT/'exported.html').write_text(html)
   passed('ZIP has complete static website, photo, backup and hosting instructions')
   exported=context.new_page();exported.goto(BASE+'/test-results/studio/exported.html')
-  expect(exported.locator('h1')).to_be_visible();assert exported.locator('[data-kind=hero] img').evaluate('(e)=>e.complete&&e.naturalWidth>0');passed('exported website renders independently')
+  expect(exported.locator('h1')).to_be_visible();assert decoded(exported.locator('[data-kind=hero] img'));passed('exported website renders independently')
   exported.locator('nav a[href="#page-1"]').click();expect(exported.locator('main:not([hidden])')).to_have_attribute('data-page','About Us');passed('exported website navigation works')
   records={}
   def route_api(route):
@@ -90,7 +92,7 @@ with sync_playwright() as p:
   page.locator('#share').click();expect(page.locator('#shareURL')).to_be_visible()
   link=page.locator('#shareURL').input_value();assert len(link)<140;passed('short preview-link client flow (mocked API)')
   shared=context.new_page();shared.goto(link);expect(shared.frame_locator('#siteFrame').locator('h1')).to_be_visible()
-  assert shared.frame_locator('#siteFrame').locator('[data-kind=hero] img').evaluate('(el)=>el.complete&&el.naturalWidth>0');passed('shared preview restores image (mocked API)')
+  assert decoded(shared.frame_locator('#siteFrame').locator('[data-kind=hero] img'));passed('shared preview restores image (mocked API)')
   bad=context.new_page();bad.goto(BASE+'/jowkari-sites/?preview_id='+'f'*32)
   expect(bad.locator('.unavailable')).to_be_visible();assert 'expired' in bad.locator('.unavailable').inner_text().lower();passed('expired preview has a useful recovery page')
   mobile=browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
