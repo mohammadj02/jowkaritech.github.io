@@ -1,0 +1,7 @@
+exclude:
+  - tests
+  - test-results
+  - cloudflare
+  - node_modules
+  - LAUNCH_CHECKLIST.md
+  - seo-release.json
