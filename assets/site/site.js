@@ -1,0 +1,25 @@
+/* Shared site interactions. Demo forms never send data or call a fictional business. */
+(()=>{'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+// Accessible mobile navigation: supports keyboard, Escape and closing after selection.
+$$('[data-menu]').forEach(button=>{const nav=document.getElementById(button.dataset.menu);if(!nav)return;const close=()=>{nav.classList.remove('open');button.setAttribute('aria-expanded','false');};button.addEventListener('click',()=>{const open=nav.classList.toggle('open');button.setAttribute('aria-expanded',String(open));});nav.addEventListener('click',e=>{if(e.target.closest('a'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){close();button.focus();}});});
+// Only enhance visible content after the observer exists; reduced motion remains static.
+if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('js-motion');const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target);}}),{threshold:.08});$$('.reveal').forEach(el=>observer.observe(el));}
+$$('[data-year]').forEach(el=>el.textContent=new Date().getFullYear());
+const demos={roofing:{name:'NorthPeak Roofing',description:'Architectural / coastal / confident',image:'/assets/site/roofing-preview.webp',url:'/demo/roofing/'},plumbing:{name:'PacificFlow Plumbing',description:'Clean / calm / approachable',image:'/assets/site/plumbing-preview.webp',url:'/demo/plumbing/'},electrician:{name:'VoltNorth Electric',description:'Technical / precise / bold',image:'/assets/site/electrician-preview.webp',url:'/demo/electrician/'}};
+$$('[data-demo-tab]').forEach(button=>button.addEventListener('click',()=>{const d=demos[button.dataset.demoTab];if(!d)return;$$('[data-demo-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));const image=$('#featuredImage');image.src=d.image;image.alt='Actual '+d.name+' concept website screenshot';$('#featuredLink').href=d.url;$('#featuredLink').setAttribute('aria-label','Open '+d.name+' interactive concept');$('#featuredName').textContent=d.name;$('#featuredDescription').textContent=d.description;}));
+const builder=$('#quickBuilder');if(builder)builder.addEventListener('submit',event=>{event.preventDefault();if(!builder.reportValidity())return;const data=new FormData(builder),query=new URLSearchParams({quick:'1',name:String(data.get('name')||'').trim(),industry:String(data.get('industry')||'Local business'),city:String(data.get('city')||'North Vancouver, BC'),services:String(data.get('services')||'')});location.assign('/jowkari-sites/?'+query);});
+// All concept intake data stays in memory. No storage or network calls are made.
+$$('[data-demo-form]').forEach(form=>{
+ const panels=$$('[data-step]',form),result=$('[data-demo-result]',form),progress=$('[data-progress]',form),dots=$$('.stepDots i',form);let step=0;
+ const show=n=>{step=n;panels.forEach((p,i)=>{p.hidden=i!==n;$$('input,textarea,select,button',p).forEach(el=>el.disabled=i!==n);});progress.textContent='Step '+(n+1)+' of '+panels.length;dots.forEach((el,i)=>el.classList.toggle('active',i<=n));};
+ const valid=()=>{for(const el of $$('input,textarea,select',panels[step])){if(!el.reportValidity())return false;}return true;};
+ show(0);
+ $$('[data-next]',form).forEach(b=>b.addEventListener('click',()=>{if(valid()){show(Math.min(step+1,panels.length-1));$('legend',panels[step]).focus();}}));
+ $$('[data-back]',form).forEach(b=>b.addEventListener('click',()=>show(Math.max(0,step-1))));
+ form.addEventListener('submit',event=>{event.preventDefault();if(!valid())return;if(step<panels.length-1){show(step+1);return;}const service=$('[name=service]:checked',form)?.value||'General enquiry';const city=$('[name=city]',form)?.value||'Your area';$('[data-summary]',result).textContent='Service: '+service+'\nArea: '+city+'\nNo request has been sent. This is a website design demonstration.';panels.forEach(p=>p.hidden=true);result.hidden=false;progress.textContent='Demo complete';$('[data-result-title]',result).focus();});
+ $('[data-reset]',form).addEventListener('click',()=>{form.reset();result.hidden=true;show(0);$('legend',panels[0]).focus();});
+ $$('[data-service]').forEach(button=>button.addEventListener('click',()=>{result.hidden=true;show(0);const match=$$('[name=service]',form).find(input=>input.value===button.dataset.service);if(match)match.checked=true;form.closest('section').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});setTimeout(()=>match?.focus({preventScroll:true}),100);}));
+});
+$$('[data-gallery-filter]').forEach(button=>button.addEventListener('click',()=>{const filter=button.dataset.galleryFilter;$$('[data-gallery-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));$$('[data-gallery-item]').forEach(item=>item.hidden=filter!=='all'&&item.dataset.galleryItem!==filter);}));
+})();
