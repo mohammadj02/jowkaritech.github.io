@@ -18,7 +18,8 @@ patch('index.html','<section id="work" class="section">','<section id="work" cla
 patch('index.html','<span id="product"></span>','<span id="product"></span><span id="features"></span>')
 p=ROOT/'assets/site/design.css';text=p.read_text();fix='\n/* Final framing: do not crop words from an actual website screenshot. */\n.workPreview img{aspect-ratio:1280/840;object-fit:contain;object-position:top left}.demoHeader{position:sticky;top:0;z-index:70}.roundBadge b{font-size:23px}\n'
 if '/* Final framing:' not in text:text+=fix
-phone='\n/* Narrow-phone typography stays inside the layout, without clipping. */\n.heroGrid>*{min-width:0}@media(max-width:520px){.electricHero h1{font-size:clamp(42px,14.5vw,57px)}}\n'
-if '/* Narrow-phone typography' not in text:text+=phone
+phone='\n/* Narrow-phone typography and min-content grids, revision 2. */\n.heroGrid>*,.electricServices article>*,.demoTitle>*,.quoteGrid>*{min-width:0}.electricServices article{grid-template-columns:minmax(0,1fr) auto}@media(max-width:520px){.electricHero h1{font-size:clamp(34px,11.5vw,57px)}.electricServices h3{overflow-wrap:anywhere}.quoteDemo .button{white-space:normal;overflow-wrap:anywhere}}\n'
+if '/* Narrow-phone typography and min-content grids, revision 2. */' not in text:text+=phone
 p.write_text(text)
+patch('tests/design-browser.py',"def no_overflow(page):return page.evaluate('document.documentElement.scrollWidth<=innerWidth')", "def no_overflow(page):\n ok=page.evaluate('document.documentElement.scrollWidth<=innerWidth')\n if not ok:print('OVERFLOW ELEMENTS:',page.locator('body *').evaluate_all('(els)=>els.map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width,left:e.getBoundingClientRect().left,right:e.getBoundingClientRect().right,text:e.textContent.slice(0,50)})).filter(x=>x.right>innerWidth+1||x.left<-1)'),flush=True)\n return ok")
 print('Studio, layout and legacy-link corrections applied. Drafts and Worker routes preserved.')
