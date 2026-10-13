@@ -14,9 +14,11 @@ patch('jowkari-sites/studio.mjs',"window.history.replaceState({},'',location.pat
 patch('jowkari-sites/studio.mjs',"if(shareRecord?.expires_at>Date.now())showShare(shareRecord);$('publishDialog').showModal();", "if(shareRecord?.expires_at>Date.now())showShare(shareRecord);else $('shareResult').hidden=true;$('publishDialog').showModal();")
 p=ROOT/'local-seo.css';text=p.read_text();fix='\n/* Table readability and reduced-motion support */\n.compare{color:#18262d}a:focus-visible,button:focus-visible{outline:3px solid #c74112;outline-offset:4px}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}\n'
 if '/* Table readability and reduced-motion support */' not in text:p.write_text(text+fix)
-# Keep entry points from all existing SEO/service pages working.
 patch('index.html','<section id="work" class="section">','<section id="work" class="section"><span id="demo"></span>')
 patch('index.html','<span id="product"></span>','<span id="product"></span><span id="features"></span>')
 p=ROOT/'assets/site/design.css';text=p.read_text();fix='\n/* Final framing: do not crop words from an actual website screenshot. */\n.workPreview img{aspect-ratio:1280/840;object-fit:contain;object-position:top left}.demoHeader{position:sticky;top:0;z-index:70}.roundBadge b{font-size:23px}\n'
-if '/* Final framing:' not in text:p.write_text(text+fix)
+if '/* Final framing:' not in text:text+=fix
+phone='\n/* Narrow-phone typography stays inside the layout, without clipping. */\n.heroGrid>*{min-width:0}@media(max-width:520px){.electricHero h1{font-size:clamp(42px,14.5vw,57px)}}\n'
+if '/* Narrow-phone typography' not in text:text+=phone
+p.write_text(text)
 print('Studio, layout and legacy-link corrections applied. Drafts and Worker routes preserved.')
