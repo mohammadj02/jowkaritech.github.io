@@ -1,0 +1,38 @@
+name: Editorial production verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/design-live.py'
+      - '.github/workflows/design-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: editorial-live-verification
+  cancel-in-progress: false
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned browser dependencies
+        run: |
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify deployed pages, real AI and one owner-only test enquiry
+        env:
+          SEND_OWNER_QA: ${{ github.run_attempt == 1 && '1' || '0' }}
+        run: python tests/design-live.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: editorial-production-verification
+          path: test-results/live/
+          retention-days: 7
