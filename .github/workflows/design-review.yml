@@ -4,18 +4,34 @@ on:
     branches: [improve/professional-site-20261012]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: design-review-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   review:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare local image assets
+        run: |
+          pip install Pillow==11.3.0
+          python .github/scripts/prepare-design-assets.py
+      - name: Commit only prepared design assets on the review branch
+        run: |
+          git config user.name 'JowkariTech design build'
+          git config user.email '125791214+mohammadj02@users.noreply.github.com'
+          git add assets/site
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add optimized self-hosted design imagery and attribution'
+            git push origin HEAD:${{ github.ref_name }}
+          fi
       - name: Export tracked source for local design review
         run: git archive --format=zip HEAD -o source-review.zip
       - uses: actions/upload-artifact@v4
