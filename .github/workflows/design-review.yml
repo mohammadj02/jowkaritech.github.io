@@ -1,0 +1,25 @@
+name: Design review
+on:
+  push:
+    branches: [improve/professional-site-20261012]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: design-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export tracked source for local design review
+        run: git archive --format=zip HEAD -o source-review.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-review
+          path: source-review.zip
+          retention-days: 2
