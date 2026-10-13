@@ -1,0 +1,23 @@
+name: Design review and release checks
+on:
+  push:
+    branches: [design/pro-studio-20261012]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: design-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bundle source for isolated review
+        run: git archive --format=zip HEAD -o /tmp/jowkari-source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jowkari-source
+          path: /tmp/jowkari-source.zip
+          retention-days: 3
