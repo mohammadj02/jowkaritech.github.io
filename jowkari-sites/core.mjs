@@ -33,7 +33,9 @@ export const safeColor = (x, fallback = '#ffffff') => /^#[0-9a-f]{6}$/i.test(x |
 const scalar = (x, low, high, fallback) => Number.isFinite(Number(x)) ? Math.max(low, Math.min(high, Number(x))) : fallback;
 export function normalize(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || !input.pages || typeof input.pages !== 'object') throw new Error('Choose a JowkariTech project JSON file.');
-  const pairs = Object.entries(input.pages).filter(([k, v]) => !['__proto__', 'constructor', 'prototype'].includes(k) && Array.isArray(v)).slice(0, 12);
+  const pairs = Object.entries(input.pages).filter(([k, v]) => !['__proto__', 'constructor', 'prototype'].includes(k) && Array.isArray(v));
+  if(pairs.length>12)throw new Error('This editor supports up to 12 pages. No pages were removed; export a backup before simplifying the project.');
+  if(pairs.some(([,v])=>v.length>50))throw new Error('A page can contain up to 50 sections. No sections were removed.');
   if (!pairs.length) throw new Error('This project has no pages.');
   const pages = Object.create(null), ids = new Set();
   for (const [key, list] of pairs) {
