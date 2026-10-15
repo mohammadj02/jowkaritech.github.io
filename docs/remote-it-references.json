@@ -1,0 +1,14 @@
+{
+  "reviewed": "2026-10-15",
+  "sources": {
+    "performance": "https://support.microsoft.com/en-us/windows/experience/performance-optimization/tips-to-improve-pc-performance-in-windows",
+    "outlook": "https://support.microsoft.com/en-us/outlook/i-can-t-send-or-receive-messages-in-outlook",
+    "offline": "https://support.microsoft.com/en-us/outlook/getstarted/how-to-work-offline-in-outlook-for-windows",
+    "recovery": "https://support.microsoft.com/en-us/accounts-billing/manage/help-with-the-microsoft-account-recovery-form",
+    "wifi": "https://support.microsoft.com/en-us/windows/experience/connectivity-networking/fix-wi-fi-connection-issues-in-windows",
+    "remote": "https://support.microsoft.com/en-us/windows/apps/solve-pc-problems-remotely-using-quick-assist",
+    "seo": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+    "sitemap": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap"
+  },
+  "technical_notes": "Original support articles use the linked official documentation; no copied provider articles."
+}

@@ -5,3 +5,6 @@ exclude:
   - node_modules
   - LAUNCH_CHECKLIST.md
   - seo-release.json
+  - marketing
+  - docs
+  - remote-it-release.json

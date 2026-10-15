@@ -50,7 +50,7 @@ def website(send=False):
     page.locator('[name=name]').fill('JowkariTech — automated release QA')
     page.locator('[name=email]').fill('jowkaritech@gmail.com')
     page.locator('[name=device]').select_option('Laptop');page.locator('[name=os]').select_option('Windows 11');page.locator('[name=issue]').select_option('Other')
-    page.locator('[name=description]').fill('QA ONLY — this is the authorized end-to-end test for remote support release JT-REMOTE-IT-20261015. Not a customer, sale, appointment or payment. No reply is needed. Please exclude it from business conversion counts.')
+    page.locator('textarea[name=description]').fill('QA ONLY — this is the authorized end-to-end test for remote support release JT-REMOTE-IT-20261015. Not a customer, sale, appointment or payment. No reply is needed. Please exclude it from business conversion counts.')
     page.locator('[name=preferred_time]').fill('QA ONLY — no appointment requested');page.locator('[name=timezone]').select_option('America/Vancouver');page.locator('[name=consent]').check();page.wait_for_timeout(2500)
     with page.expect_response(lambda r:r.url==API+'/v1/requests' and r.request.method=='POST',timeout=25000) as response:page.locator('#supportRequest [type=submit]').click()
     r=response.value;j=r.json();assert r.status==201 and j.get('status')=='provider_accepted','Real notification was not confirmed: HTTP '+str(r.status)+' / '+str(j.get('code'))
