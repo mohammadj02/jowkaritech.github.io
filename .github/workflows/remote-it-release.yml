@@ -15,6 +15,12 @@ on:
       - 'marketing/remote-support-launch.md'
       - 'docs/REMOTE_IT_OPERATIONS.md'
   workflow_dispatch:
+    inputs:
+      send_owner_qa:
+        description: Send one clearly marked test request to the configured owner inbox
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -154,9 +160,9 @@ jobs:
         run: |
           pip install beautifulsoup4==4.13.5 playwright==1.55.0
           python -m playwright install --with-deps chromium
-      - name: Verify Pages, existing products and one owner-only test enquiry
+      - name: Verify Pages and existing products; owner test is opt-in
         env:
-          SEND_OWNER_QA: ${{ github.run_attempt == 1 && '1' || '0' }}
+          SEND_OWNER_QA: ${{ github.event_name == 'workflow_dispatch' && inputs.send_owner_qa && github.run_attempt == 1 && '1' || '0' }}
         run: |
           if [ "$SEND_OWNER_QA" = '1' ]; then
             python tests/support-live.py website --send-owner-qa
