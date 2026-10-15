@@ -1,0 +1,95 @@
+name: North Vancouver laptop search
+on:
+  push:
+    branches: [seo/north-vancouver-laptop-20261015, main]
+    paths:
+      - '.github/scripts/north-van-laptop.py'
+      - '.github/workflows/laptop-search.yml'
+      - 'tests/laptop-search.py'
+      - 'computer-help-north-vancouver/**'
+      - 'marketing/north-vancouver-laptop-launch.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: laptop-search-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing pinned QA tools
+        run: |
+          pip install beautifulsoup4==4.13.5 playwright==1.55.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Apply focused copy only on the feature branch
+        if: github.ref == 'refs/heads/seo/north-vancouver-laptop-20261015'
+        run: python .github/scripts/north-van-laptop.py
+      - name: Verify existing server, editor, SEO and support behaviour
+        run: |
+          node --test tests/studio-core.test.mjs tests/support-worker.test.mjs
+          python .github/scripts/seo-release.py verify
+          python tests/studio-browser.py
+          python tests/seo-browser.py
+          python tests/support-browser.py
+      - name: Verify laptop topic page and enquiry paths
+        run: python tests/laptop-search.py
+      - name: Commit only the tested copy and regeneration/QA changes
+        if: github.ref == 'refs/heads/seo/north-vancouver-laptop-20261015'
+        run: |
+          git config user.name 'JowkariTech release build'
+          git config user.email '125791214+mohammadj02@users.noreply.github.com'
+          git add -- .github/scripts/build-support.py .github/workflows/remote-it-release.yml computer-help-north-vancouver/index.html index.html services.html about.html contact.html remote-it-support/index.html support-resources/slow-windows-11/index.html support-resources/outlook-not-receiving-email/index.html sitemap.xml
+          if ! git diff --cached --quiet; then
+            git commit -m 'Clarify North Vancouver laptop support and preserve verified customer paths'
+            git push origin HEAD:seo/north-vancouver-laptop-20261015
+          fi
+      - name: Archive reviewed source
+        if: success()
+        run: git archive --format=zip HEAD -o laptop-search-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: laptop-search-qa
+          path: test-results/laptop-search/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: laptop-search-source
+          path: laptop-search-source.zip
+          retention-days: 7
+  production:
+    if: github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser verification tools
+        run: |
+          pip install beautifulsoup4==4.13.5 playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify the actual live page and form readiness without email or spending
+        run: python tests/laptop-search.py --live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: laptop-search-production
+          path: test-results/laptop-search/
+          retention-days: 7
