@@ -5,13 +5,14 @@ on:
     paths:
       - 'assets/support/**'
       - '.github/scripts/build-support.py'
+      - '.github/scripts/normalize-support-copy.py'
       - '.github/workflows/remote-it-release.yml'
       - 'cloudflare/support-worker.mjs'
       - 'cloudflare/prepare-support.py'
       - 'tests/support*'
       - 'remote-it-release.json'
       - 'marketing/remote-support-launch.md'
-      - 'docs/remote-support-operations.md'
+      - 'docs/REMOTE_IT_OPERATIONS.md'
   workflow_dispatch:
 permissions:
   contents: read
@@ -50,7 +51,9 @@ jobs:
           python tests/seo-browser.py
       - name: Build support pages on isolated feature branch
         if: github.ref == 'refs/heads/feature/remote-it-support-20261015'
-        run: python .github/scripts/build-support.py
+        run: |
+          python .github/scripts/normalize-support-copy.py
+          python .github/scripts/build-support.py
       - name: Syntax, validation and server tests
         run: |
           mkdir -p test-results/support
@@ -69,14 +72,18 @@ jobs:
         run: |
           git config user.name 'JowkariTech release build'
           git config user.email '125791214+mohammadj02@users.noreply.github.com'
-          git add -- index.html services.html about.html contact.html sitemap.xml seo-release.json _config.yml remote-it-release.json docs/remote-it-references.json remote-it-support computer-help-north-vancouver password-recovery-help business-it-support request-support support-pricing support-resources privacy support-terms
+          git add -- .github/scripts/build-support.py index.html services.html about.html contact.html sitemap.xml seo-release.json _config.yml remote-it-release.json docs/remote-it-references.json remote-it-support computer-help-north-vancouver password-recovery-help business-it-support request-support support-pricing support-resources privacy support-terms
           if ! git diff --cached --quiet; then
             git commit -m 'Publish verified remote IT support pages, transparent pricing and consent intake'
             git push origin HEAD:feature/remote-it-support-20261015
           fi
-      - name: Export verified source
-        if: success()
-        run: git archive --format=zip HEAD -o remote-support-source.zip
+      - name: Export source and uncommitted build diagnostics
+        if: always()
+        run: |
+          git archive --format=zip HEAD -o remote-support-source.zip
+          mkdir -p test-results/build-source
+          cp .github/scripts/build-support.py test-results/build-source/
+          if [ -f remote-it-release.json ]; then cp remote-it-release.json test-results/build-source/; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -84,7 +91,7 @@ jobs:
           path: test-results/
           retention-days: 7
       - uses: actions/upload-artifact@v4
-        if: success()
+        if: always()
         with:
           name: remote-support-source
           path: remote-support-source.zip
