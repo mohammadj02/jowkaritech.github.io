@@ -168,6 +168,10 @@ for path in ['index.html','services.html','about.html','contact.html']:
  if target and not target.select_one('[data-it-footer]'):
   target.append(fragment('<nav class="seo-footer-links" data-it-footer aria-label="Remote support"><a href="/remote-it-support/">Remote IT Support Canada</a><a href="/computer-help-north-vancouver/">North Vancouver computer help</a><a href="/password-recovery-help/">Account recovery assistance</a><a href="/business-it-support/">Business IT support</a><a href="/support-resources/">Support guides</a><a href="/privacy/">Privacy</a><a href="/support-terms/">Support terms</a></nav>'))
   write(path,str(s))
+# Laptop search copy: keep the existing local page as the single canonical destination.
+import runpy
+runpy.run_path(str(ROOT/'.github/scripts/north-van-laptop.py'))['update'](ROOT)
+
 # Keep prior Search Console and Bing/IndexNow verification files byte-identical.
 NS='http://www.sitemaps.org/schemas/sitemap/0.9';ET.register_namespace('',NS);tree=ET.parse(ROOT/'sitemap.xml');root=tree.getroot();seen={x.find('{'+NS+'}loc').text:x for x in root}
 for u in PUBLIC:
