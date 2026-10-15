@@ -6,6 +6,7 @@ on:
       - 'assets/support/**'
       - '.github/scripts/build-support.py'
       - '.github/scripts/normalize-support-copy.py'
+      - '.github/scripts/submit-support-indexnow.py'
       - '.github/workflows/remote-it-release.yml'
       - 'cloudflare/support-worker.mjs'
       - 'cloudflare/prepare-support.py'
@@ -72,7 +73,7 @@ jobs:
         run: |
           git config user.name 'JowkariTech release build'
           git config user.email '125791214+mohammadj02@users.noreply.github.com'
-          git add -- .github/scripts/build-support.py index.html services.html about.html contact.html sitemap.xml seo-release.json _config.yml remote-it-release.json docs/remote-it-references.json remote-it-support computer-help-north-vancouver password-recovery-help business-it-support request-support support-pricing support-resources privacy support-terms
+          git add -- .github/scripts/build-support.py tests/support-browser.py tests/support-live.py index.html services.html about.html contact.html sitemap.xml seo-release.json _config.yml remote-it-release.json docs/remote-it-references.json remote-it-support computer-help-north-vancouver password-recovery-help business-it-support request-support support-pricing support-resources privacy support-terms
           if ! git diff --cached --quiet; then
             git commit -m 'Publish verified remote IT support pages, transparent pricing and consent intake'
             git push origin HEAD:feature/remote-it-support-20261015
@@ -162,6 +163,8 @@ jobs:
           else
             python tests/support-live.py website
           fi
+      - name: Notify search engines of verified public page changes
+        run: python .github/scripts/submit-support-indexnow.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
