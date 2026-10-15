@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/scripts/north-van-laptop.py'
       - '.github/workflows/laptop-search.yml'
+      - '.github/workflows/remote-it-release.yml'
       - 'tests/laptop-search.py'
       - 'computer-help-north-vancouver/**'
       - 'marketing/north-vancouver-laptop-launch.md'
@@ -34,7 +35,9 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Apply focused copy only on the feature branch
         if: github.ref == 'refs/heads/seo/north-vancouver-laptop-20261015'
-        run: python .github/scripts/north-van-laptop.py
+        run: |
+          python .github/scripts/north-van-laptop.py
+          git diff --exit-code -- .github/workflows/
       - name: Verify existing server, editor, SEO and support behaviour
         run: |
           node --test tests/studio-core.test.mjs tests/support-worker.test.mjs
@@ -44,12 +47,12 @@ jobs:
           python tests/support-browser.py
       - name: Verify laptop topic page and enquiry paths
         run: python tests/laptop-search.py
-      - name: Commit only the tested copy and regeneration/QA changes
+      - name: Commit only the tested copy and regeneration changes
         if: github.ref == 'refs/heads/seo/north-vancouver-laptop-20261015'
         run: |
           git config user.name 'JowkariTech release build'
           git config user.email '125791214+mohammadj02@users.noreply.github.com'
-          git add -- .github/scripts/build-support.py .github/workflows/remote-it-release.yml computer-help-north-vancouver/index.html index.html services.html about.html contact.html remote-it-support/index.html support-resources/slow-windows-11/index.html support-resources/outlook-not-receiving-email/index.html sitemap.xml
+          git add -- .github/scripts/build-support.py computer-help-north-vancouver/index.html index.html services.html about.html contact.html remote-it-support/index.html support-resources/slow-windows-11/index.html support-resources/outlook-not-receiving-email/index.html sitemap.xml
           if ! git diff --cached --quiet; then
             git commit -m 'Clarify North Vancouver laptop support and preserve verified customer paths'
             git push origin HEAD:seo/north-vancouver-laptop-20261015
