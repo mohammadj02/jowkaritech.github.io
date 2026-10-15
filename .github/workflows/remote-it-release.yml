@@ -1,0 +1,163 @@
+name: Remote IT support release
+on:
+  push:
+    branches: [feature/remote-it-support-20261015, main]
+    paths:
+      - 'assets/support/**'
+      - '.github/scripts/build-support.py'
+      - '.github/workflows/remote-it-release.yml'
+      - 'cloudflare/support-worker.mjs'
+      - 'cloudflare/prepare-support.py'
+      - 'tests/support*'
+      - 'remote-it-release.json'
+      - 'marketing/remote-support-launch.md'
+      - 'docs/remote-support-operations.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: remote-it-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned test tools
+        run: |
+          pip install beautifulsoup4==4.13.5 playwright==1.55.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+      - name: Establish known production baseline before changes
+        if: github.ref == 'refs/heads/feature/remote-it-support-20261015'
+        run: |
+          mkdir -p "$RUNNER_TEMP/jowkari-baseline"
+          git archive df67e917e774e0cdd2dc21c3014de8ce5ddd5afc | tar -x -C "$RUNNER_TEMP/jowkari-baseline"
+          cd "$RUNNER_TEMP/jowkari-baseline"
+          node --test tests/studio-core.test.mjs
+          python .github/scripts/seo-release.py verify
+          python tests/studio-browser.py
+          python tests/seo-browser.py
+      - name: Build support pages on isolated feature branch
+        if: github.ref == 'refs/heads/feature/remote-it-support-20261015'
+        run: python .github/scripts/build-support.py
+      - name: Syntax, validation and server tests
+        run: |
+          mkdir -p test-results/support
+          node --check assets/support/support.js
+          node --check cloudflare/support-worker.mjs
+          node --test tests/studio-core.test.mjs tests/support-worker.test.mjs | tee test-results/support/unit.log
+          python .github/scripts/seo-release.py verify
+      - name: Preserve existing product and SEO browser behaviour
+        run: |
+          python tests/studio-browser.py
+          python tests/seo-browser.py
+      - name: New support pages, privacy, consent and form browser checks
+        run: python tests/support-browser.py
+      - name: Commit only tested generated output to the feature branch
+        if: github.ref == 'refs/heads/feature/remote-it-support-20261015'
+        run: |
+          git config user.name 'JowkariTech release build'
+          git config user.email '125791214+mohammadj02@users.noreply.github.com'
+          git add -- index.html services.html about.html contact.html sitemap.xml seo-release.json _config.yml remote-it-release.json docs/remote-it-references.json remote-it-support computer-help-north-vancouver password-recovery-help business-it-support request-support support-pricing support-resources privacy support-terms
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish verified remote IT support pages, transparent pricing and consent intake'
+            git push origin HEAD:feature/remote-it-support-20261015
+          fi
+      - name: Export verified source
+        if: success()
+        run: git archive --format=zip HEAD -o remote-support-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: remote-support-qa
+          path: test-results/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: remote-support-source
+          path: remote-support-source.zip
+          retention-days: 7
+  deploy-support:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: jowkari-support-worker-deployment
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare only the support Worker binding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 cloudflare/prepare-support.py prepare
+      - name: Deploy new support request service
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy --config cloudflare/wrangler.support.runtime.json
+      - name: Configure secrets from existing owner email integration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 cloudflare/prepare-support.py secrets
+      - name: Verify real backend without sending email
+        run: |
+          python3 -m pip install beautifulsoup4==4.13.5
+          python3 tests/support-live.py backend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: remote-support-backend-checks
+          path: test-results/support-live/
+          retention-days: 7
+  production:
+    if: github.ref == 'refs/heads/main'
+    needs: [verify, deploy-support]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install live browser test tools
+        run: |
+          pip install beautifulsoup4==4.13.5 playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify Pages, existing products and one owner-only test enquiry
+        env:
+          SEND_OWNER_QA: ${{ github.run_attempt == 1 && '1' || '0' }}
+        run: |
+          if [ "$SEND_OWNER_QA" = '1' ]; then
+            python tests/support-live.py website --send-owner-qa
+          else
+            python tests/support-live.py website
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: remote-support-production-checks
+          path: test-results/support-live/
+          retention-days: 7
