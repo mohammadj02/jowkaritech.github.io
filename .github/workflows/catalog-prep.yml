@@ -1,0 +1,148 @@
+name: Catalog Prep pilot
+on:
+  push:
+    branches: [feature/catalog-prep-20261021, main]
+    paths:
+      - '_catalog-prep/**'
+      - '.github/workflows/catalog-prep.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: catalog-prep-release
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify original business site is untouched
+        run: |
+          python - <<'PY'
+          import subprocess
+          base='1c8956ba19c0a10d492f1781bb97c0aeaf607bda'
+          changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          unexpected=[p for p in changed if not p.startswith('_catalog-prep/') and p!='.github/workflows/catalog-prep.yml']
+          assert not unexpected, 'Unexpected existing-site changes: '+str(unexpected)
+          print('Original site, editor, support services and configuration preserved.')
+          PY
+      - name: Build isolated assets and pin dependency provenance
+        run: python _catalog-prep/build.py
+      - name: Source syntax and existing/new unit regressions
+        run: |
+          node --check _catalog-prep/public/app.mjs
+          node --check _catalog-prep/public/parser.js
+          node --check _catalog-prep/worker.mjs
+          node --test _catalog-prep/tests/core.test.mjs tests/studio-core.test.mjs tests/support-worker.test.mjs
+      - name: Install pinned browser tools
+        run: |
+          pip install playwright==1.55.0 Pillow==11.3.0 beautifulsoup4==4.13.5
+          python -m playwright install --with-deps chromium
+      - name: App and existing editor browser tests
+        run: |
+          python _catalog-prep/tests/browser.py
+          python tests/studio-browser.py
+          python .github/scripts/seo-release.py verify
+      - name: Save generated dependency files only on feature branch
+        if: github.ref == 'refs/heads/feature/catalog-prep-20261021'
+        run: |
+          git config user.name 'JowkariTech release build'
+          git config user.email '125791214+mohammadj02@users.noreply.github.com'
+          git add -- _catalog-prep/public/vendor _catalog-prep/wrangler.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Pin verified XLSX parser, license and isolated Worker configuration'
+            git push origin HEAD:feature/catalog-prep-20261021
+          fi
+      - name: Record exact tested source
+        id: source
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git archive --format=zip HEAD -o catalog-prep-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-prep-qa
+          path: _catalog-prep/test-results/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: catalog-prep-source
+          path: catalog-prep-source.zip
+          retention-days: 7
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify existing access and reject a conflicting Worker name
+        id: access
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python _catalog-prep/build.py preflight
+      - name: Deploy only the new Catalog Prep Worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy --config _catalog-prep/wrangler.json
+      - name: Verify the live product identity and no-upload boundary
+        env:
+          APP_URL: ${{ steps.access.outputs.url }}
+        run: |
+          python - <<'PY'
+          import json,os,time,urllib.request,urllib.error
+          url=os.environ['APP_URL']
+          for i in range(20):
+            try:
+              with urllib.request.urlopen(url+'/health',timeout=15) as r:
+                j=json.load(r)
+                assert j['product']=='catalog-prep' and j['version']=='0.1.0' and j['billing'] is False
+                assert 'frame-ancestors' in r.headers['Content-Security-Policy']
+              break
+            except Exception:
+              if i==19: raise
+              time.sleep(3)
+          try: urllib.request.urlopen(urllib.request.Request(url+'/upload',data=b'synthetic-test',method='POST'),timeout=15)
+          except urllib.error.HTTPError as e: assert e.code==405
+          else: raise AssertionError('An upload endpoint must not accept files.')
+          print('Live app and no-upload boundary verified: '+url)
+          PY
+      - name: Verify actual browser workflow on the deployed app
+        env:
+          APP_URL: ${{ steps.access.outputs.url }}
+        run: |
+          pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+          python _catalog-prep/tests/browser.py --live "$APP_URL"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-prep-production
+          path: _catalog-prep/test-results/
+          retention-days: 7
