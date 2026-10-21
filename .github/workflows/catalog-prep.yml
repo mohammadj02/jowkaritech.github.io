@@ -105,11 +105,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: python _catalog-prep/build.py preflight
       - name: Deploy only the new Catalog Prep Worker
+        id: publish
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: '4'
+          wranglerVersion: '4.151.3'
           command: deploy --config _catalog-prep/wrangler.json
       - name: Verify the live product identity and no-upload boundary
         env:
@@ -118,22 +119,29 @@ jobs:
           python - <<'PY'
           import json,os,time,urllib.request,urllib.error
           url=os.environ['APP_URL']
+          headers={'User-Agent':'JowkariTech-Release-QA/0.1 (+https://jowkaritech.com)','Accept':'application/json','Cache-Control':'no-cache'}
           for i in range(20):
             try:
-              with urllib.request.urlopen(url+'/health',timeout=15) as r:
+              req=urllib.request.Request(url+'/health',headers=headers)
+              with urllib.request.urlopen(req,timeout=15) as r:
                 j=json.load(r)
                 assert j['product']=='catalog-prep' and j['version']=='0.1.0' and j['billing'] is False
                 assert 'frame-ancestors' in r.headers['Content-Security-Policy']
               break
+            except urllib.error.HTTPError as e:
+              if i in [0,19]:print('Public health response:',e.code,'server=',e.headers.get('Server'),'content-type=',e.headers.get('Content-Type'),'body=',e.read(600).decode(errors='replace'),flush=True)
+              if i==19: raise
+              time.sleep(3)
             except Exception:
               if i==19: raise
               time.sleep(3)
-          try: urllib.request.urlopen(urllib.request.Request(url+'/upload',data=b'synthetic-test',method='POST'),timeout=15)
+          try: urllib.request.urlopen(urllib.request.Request(url+'/upload',data=b'synthetic-test',headers=headers,method='POST'),timeout=15)
           except urllib.error.HTTPError as e: assert e.code==405
           else: raise AssertionError('An upload endpoint must not accept files.')
           print('Live app and no-upload boundary verified: '+url)
           PY
       - name: Verify actual browser workflow on the deployed app
+        if: ${{ !cancelled() && steps.publish.outcome == 'success' }}
         env:
           APP_URL: ${{ steps.access.outputs.url }}
         run: |
