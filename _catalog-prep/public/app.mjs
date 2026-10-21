@@ -2,14 +2,15 @@ import {VERSION,FIELDS,LIMITS,SAMPLE,parseCSV,guessMapping,defaultSettings,conve
 const $=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY='jowkari.catalog.mapping.v1';let table=null,original=null,mapping={},settings=defaultSettings(),result=null,worker=null,pending=null,generation=0,page=0,filename='',file=null;
 function status(message,bad=false){$('status').textContent=message;$('status').className=bad?'status error':'status';}
-function invalidate(){result=null;$('review').hidden=true;$('ack').checked=false;$('exportAll').disabled=true;$('exportSample').disabled=true;$('report').disabled=true;}
+function invalidate(){result=null;for(const id of ['issues','issuesMore','changes','auditBody','outputHead','outputBody','outputNotice','resultTitle'])$(id).replaceChildren();$('review').hidden=true;$('ack').checked=false;$('exportAll').disabled=true;$('exportSample').disabled=true;$('report').disabled=true;}
+function clearRenderedSource(){for(const id of ['sourceHead','sourceBody','mapping','fileSummary','blankNotice','pageLabel'])$(id).replaceChildren();mapping={};settings=defaultSettings();}
 function stop(){if(pending){clearTimeout(pending.timer);pending.reject(Error('Operation cancelled.'));pending=null;}worker?.terminate();worker=null;}
 function freshWorker(){worker=new Worker('./parser.js');worker.onmessage=event=>{if(!pending)return;const p=pending;pending=null;clearTimeout(p.timer);event.data.ok?p.resolve(event.data):p.reject(Error(event.data.error));};worker.onerror=()=>{if(pending){const p=pending;pending=null;clearTimeout(p.timer);p.reject(Error('The file reader could not start. Reload the page or use a UTF-8 CSV.'));}};}
 function request(data,transfers=[]){return new Promise((resolve,reject)=>{if(!worker)freshWorker();if(pending){reject(Error('Please wait for the current file to finish.'));return;}pending={resolve,reject,timer:setTimeout(()=>{stop();status('File processing exceeded 10 seconds. Use a smaller CSV or workbook.',true);},10000)};worker.postMessage(data,transfers);});}
 function busy(on){$('file').disabled=on;$('sample').disabled=on;$('sheet').disabled=on;$('delimiter').disabled=on;$('fileBusy').hidden=!on;}
 function accept(t){table=t;original=t.rows.map(r=>[...r]);mapping=guessMapping(t.headers);settings=defaultSettings();page=0;invalidate();$('workspace').hidden=false;$('fileSummary').textContent=filename+' · '+t.rows.length+' rows · '+t.headers.length+' columns';$('blankNotice').textContent=t.blankRows.length?t.blankRows.length+' empty records were skipped (listed in the review report).':'';renderMapping();renderSource();status('File read locally. Confirm the column mapping and selling-price currency before validation.');}
 async function load(f){
- generation++;const ticket=generation;stop();invalidate();table=null;original=null;file=f;$('workspace').hidden=true;$('sheetWrap').hidden=true;
+ generation++;const ticket=generation;stop();invalidate();clearRenderedSource();table=null;original=null;file=f;$('workspace').hidden=true;$('sheetWrap').hidden=true;
  if(!f)return;filename=f.name;const ext=f.name.split('.').pop().toLowerCase();
  if(!['csv','xlsx'].includes(ext)){status('Use a .csv or .xlsx file. PDFs, XLS and macro-enabled workbooks are not supported.',true);return;}
  if(f.size>LIMITS.bytes){status('Choose a file smaller than 2 MB.',true);return;}
@@ -21,9 +22,9 @@ async function load(f){
 }
 $('file').onchange=ev=>load(ev.target.files[0]);
 $('delimiter').onchange=()=>{if(file?.name.toLowerCase().endsWith('.csv'))load(file);};
-$('sheet').onchange=async()=>{generation++;const ticket=generation;invalidate();table=null;$('workspace').hidden=true;busy(true);try{const data=await request({kind:'sheet',sheet:$('sheet').value});if(ticket===generation)accept(data.table);}catch(e){if(ticket===generation)status(e.message,true);}finally{if(ticket===generation)busy(false);}};
+$('sheet').onchange=async()=>{generation++;const ticket=generation;invalidate();clearRenderedSource();table=null;$('workspace').hidden=true;busy(true);try{const data=await request({kind:'sheet',sheet:$('sheet').value});if(ticket===generation)accept(data.table);}catch(e){if(ticket===generation)status(e.message,true);}finally{if(ticket===generation)busy(false);}};
 $('sample').onclick=()=>{$('delimiter').value=',';load(new File([SAMPLE],'example-supplier.csv',{type:'text/csv'}));};
-$('clear').onclick=()=>{generation++;stop();busy(false);table=null;original=null;file=null;filename='';$('file').value='';$('workspace').hidden=true;$('sheetWrap').hidden=true;invalidate();status('File and working results cleared from the app. Any saved mapping remains until you forget it.');};
+$('clear').onclick=()=>{generation++;stop();busy(false);clearRenderedSource();$('sheet').replaceChildren();table=null;original=null;file=null;filename='';$('file').value='';$('workspace').hidden=true;$('sheetWrap').hidden=true;invalidate();status('File and working results cleared from the app. Any saved mapping remains until you forget it.');};
 function renderMapping(){
  $('mapping').innerHTML=FIELDS.map(([key,label,required])=>'<label for="map-'+key+'">'+label+(required?' <span class="required">Required</span>':'')+'<select id="map-'+key+'" data-map="'+key+'"><option value="-1">'+(required?'Choose a column':'Do not include')+'</option>'+table.headers.map((h,i)=>'<option value="'+i+'" '+(mapping[key]===i?'selected':'')+'>'+esc(h)+'</option>').join('')+'</select></label>').join('');
  $('decimal').value=settings.decimal;$('currency').value=settings.currency;[1,2,3].forEach((n)=>$('optionName'+n).value=settings.optionNames[n-1]||'');$('mapConfirm').checked=false;
